@@ -1,142 +1,183 @@
-// =========================
-// Reaction Game Script
-// =========================
+// ===== Game State =====
+let gameMode = "classic";
+let difficulty = "easy";
+let targetButton = null;
+let startTime = null;
+let round = 0;
+let maxRounds = 5;
+let highScore = Infinity;
 
-// --- Global Variables ---
-let gameMode = null;
-let difficulty = null;
-let activeButton = null;
-let reactionTimes = [];
-let roundCount = 0;
-let maxRounds = 0;
-let gameActive = false;
+// ===== Session Storage =====
+let sessionResults = [];
 
-// --- Utility: Random Delay ---
-function randomDelay(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+// ===== Settings by Difficulty =====
+const difficultySettings = {
+  easy: { minDelay:2000, maxDelay:4000 },
+  medium: { minDelay:1000, maxDelay:3000 },
+  hard: { minDelay:500, maxDelay:2000 }
+};
+
+// ===== Chart =====
+let reactionChart = null;
+function initChart() {
+  const ctx = document.getElementById('reactionChart').getContext('2d');
+  reactionChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Reaction Time (ms)',
+          data: [],
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.2)',
+          tension: 0.2,
+          fill: true
+        },
+        {
+          label: 'Correct Presses',
+          data: [],
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.2)',
+          tension: 0.2,
+          fill: true
+        }
+      ]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero:true } } }
+  });
 }
 
-// --- Start Game ---
-function startGame(selectedMode, selectedDifficulty = null) {
-    gameMode = selectedMode;
-    difficulty = selectedDifficulty;
-    reactionTimes = [];
-    roundCount = 0;
-    gameActive = true;
-
-    if (gameMode === "classic") {
-        if (difficulty === "easy") maxRounds = 5;
-        if (difficulty === "medium") maxRounds = 7;
-        if (difficulty === "hard") maxRounds = 10;
-    } else if (gameMode === "endurance") {
-        maxRounds = 5; // fixed 5 rounds
-    } else if (gameMode === "unlimited") {
-        maxRounds = Infinity; // goes until user stops
-    }
-
-    document.getElementById("status").textContent = "Game Started!";
-    nextRound();
+function updateChart() {
+  if (!reactionChart) return;
+  const times = sessionResults.filter(r => r.reactionTime !== "-");
+  reactionChart.data.labels = sessionResults.map(r => `R${r.round}`);
+  reactionChart.data.datasets[0].data = sessionResults.map(r => r.reactionTime === "-" ? null : r.reactionTime);
+  reactionChart.data.datasets[1].data = sessionResults.map(r => r.status==="Correct"?1:0);
+  reactionChart.update();
 }
 
-// --- Start New Round ---
-function nextRound() {
-    if (!gameActive) return;
+// ===== Initialize =====
+window.addEventListener("DOMContentLoaded", () => {
+  const stored = JSON.parse(localStorage.getItem("reactionGameAttempts")||"[]");
+  if(stored.length){
+    sessionResults = stored.slice(-20);
+    updateAttemptsTable();
+    updateHighScore();
+  }
+  initChart();
+  updateChart();
+});
 
-    // End game if Classic/Endurance is finished
-    if ((gameMode === "classic" || gameMode === "endurance") && roundCount >= maxRounds) {
-        endGame();
-        return;
-    }
-
-    roundCount++;
-    document.getElementById("status").textContent = `Round ${roundCount}`;
-
-    // Clear previous active button
-    if (activeButton) {
-        activeButton.classList.remove("active");
-        activeButton = null;
-    }
-
-    // Choose random button
-    const buttons = document.querySelectorAll(".game-button");
-    const randomIndex = Math.floor(Math.random() * buttons.length);
-    activeButton = buttons[randomIndex];
-
-    // Delay before glowing
-    const delay = randomDelay(1000, 3000);
-    setTimeout(() => {
-        if (!gameActive) return;
-        activeButton.classList.add("active"); // Glow green
-        activeButton.dataset.startTime = Date.now(); // Track time
-    }, delay);
+// ===== Start Game =====
+function startGame(){
+  gameMode = document.getElementById("mode").value;
+  difficulty = document.getElementById("difficulty").value;
+  round = 0;
+  targetButton = null;
+  sessionResults = sessionResults.slice(-20);
+  document.querySelector("#attempts-table tbody").innerHTML = "";
+  document.getElementById("results").innerHTML = "";
+  document.getElementById("status").textContent = "Game started!";
+  updateRoundCounter();
+  nextRound();
 }
 
-// --- Handle Button Click ---
-function handleButtonClick(event) {
-    if (!gameActive) return;
+// ===== Next Round =====
+function nextRound(){
+  clearGlow();
+  round++;
+  updateRoundCounter();
 
-    const clickedButton = event.target;
+  if((gameMode==="classic"||gameMode==="endurance") && round>maxRounds){
+    endGame();
+    return;
+  }
 
-    if (clickedButton === activeButton && activeButton.classList.contains("active")) {
-        const reactionTime = Date.now() - activeButton.dataset.startTime;
-        reactionTimes.push(reactionTime);
+  document.getElementById("status").textContent = "Get ready...";
+  const {minDelay,maxDelay} = difficultySettings[difficulty];
+  const delay = Math.floor(Math.random()*(maxDelay-minDelay+1))+minDelay;
 
-        document.getElementById("status").textContent =
-            `✅ Correct! Reaction Time: ${reactionTime} ms`;
-
-        activeButton.classList.remove("active");
-        activeButton = null;
-
-        // ----- Add this line to update the metrics panel -----
-        updateMetrics();
-    } else {
-        document.getElementById("status").textContent = `❌ Wrong button!`;
-        // Optional: store a "-" or wrong attempt if you track reactionTimes with status
-        reactionTimes.push("-");
-        
-        // Update metrics even for wrong presses
-        updateMetrics();
-    }
-
-    // Continue to the next round if applicable...
+  setTimeout(()=>{
+    targetButton = Math.floor(Math.random()*3)+1;
+    document.getElementById(`button${targetButton}`).classList.add("glow");
+    document.getElementById("status").textContent = `Press Button ${targetButton}! (or press ${targetButton})`;
+    startTime = Date.now();
+  }, delay);
 }
 
+// ===== Handle Button Press =====
+function handleButtonPress(button){
+  if(!targetButton) return;
 
-// --- End Game ---
-function endGame() {
-    gameActive = false;
-    if (reactionTimes.length === 0) {
-        document.getElementById("status").textContent = "Game Over! No results recorded.";
-        return;
+  let reactionTime = Date.now() - startTime;
+  let statusText="";
+  if(button===targetButton){
+    statusText = `✅ Correct! Time: ${reactionTime} ms`;
+    sessionResults.push({round, reactionTime, status:"Correct"});
+    if(reactionTime<highScore){
+      highScore = reactionTime;
+      confetti({particleCount:100, spread:70, origin:{y:0.6}});
     }
+  } else {
+    statusText = `❌ Wrong! Pressed ${button}, needed ${targetButton}`;
+    sessionResults.push({round, reactionTime:"-", status:"Wrong"});
+  }
 
-    let resultMessage = "Game Over! ";
-    if (gameMode === "endurance") {
-        const avgTime = Math.round(
-            reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
-        );
-        resultMessage += `Average Reaction Time: ${avgTime} ms`;
-    } else {
-        const bestTime = Math.min(...reactionTimes);
-        resultMessage += `Best Reaction Time: ${bestTime} ms`;
-    }
+  document.getElementById("status").textContent = statusText;
+  updateAttemptsTable();
+  saveRecentAttempts();
+  updateChart();
+  miniCoach(sessionResults); // ← Call mini AI Coach
+  clearGlow();
+  targetButton = null;
 
-    document.getElementById("status").textContent = resultMessage;
-}
-function updateMetrics(){
-  const validTimes = sessionResults.filter(r=>r.reactionTime!=="-").map(r=>r.reactionTime);
-  const avg = validTimes.length ? (validTimes.reduce((a,b)=>a+b,0)/validTimes.length).toFixed(2) : "-";
-  const correct = sessionResults.filter(r=>r.status==="Correct").length;
-  const wrong = sessionResults.filter(r=>r.status==="Wrong").length;
-
-  document.getElementById("avg-time").textContent = avg;
-  document.getElementById("correct-count").textContent = correct;
-  document.getElementById("wrong-count").textContent = wrong;
-  document.getElementById("highscore").textContent = highScore === Infinity ? "-" : highScore;
+  setTimeout(nextRound, gameMode==="unlimited"?1000:1500);
 }
 
+// ===== Round Counter =====
+function updateRoundCounter(){
+  document.getElementById("round-counter").textContent = `Round ${round} of ${maxRounds}`;
+}
 
-// --- Event Listeners ---
-document.querySelectorAll(".game-button").forEach(button => {
-    button.addEventListener("click", handleButtonClick);
+// ===== Update Attempts Table =====
+function updateAttemptsTable(){
+  const tbody = document.querySelector("#attempts-table tbody");
+  tbody.innerHTML="";
+  sessionResults.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${r.round}</td><td>${r.reactionTime}</td><td>${r.status}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== Highscore =====
+function updateHighScore(){
+  const times = sessionResults.filter(r=>r.reactionTime!=="-").map(r=>r.reactionTime);
+  if(times.length) highScore = Math.min(...times);
+}
+
+// ===== Save Attempts =====
+function saveRecentAttempts(){
+  const last20 = sessionResults.slice(-20);
+  localStorage.setItem("reactionGameAttempts", JSON.stringify(last20));
+}
+
+// ===== Clear Glow =====
+function clearGlow(){
+  document.querySelectorAll(".game-button").forEach(btn=>btn.classList.remove("glow"));
+}
+
+// ===== End Game =====
+function endGame(){
+  let times = sessionResults.filter(r=>r.reactionTime!=="-").map(r=>r.reactionTime);
+  const avg = times.length ? (times.reduce((a,b)=>a+b,0)/times.length).toFixed(2) : "-";
+  document.getElementById("status").textContent = `Game Over! Average: ${avg} ms`;
+}
+
+// ===== Keyboard Input =====
+document.addEventListener("keydown",(e)=>{
+  if(["1","2","3"].includes(e.key)){
+    handleButtonPress(parseInt(e.key));
+  }
 });
