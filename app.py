@@ -63,6 +63,5 @@ def start_round():
 @app.route("/api/status", methods=["GET"])
 def get_status():
     return jsonify(game_state)
-
 if __name__ == "__main__":
     app.run(debug=True)
