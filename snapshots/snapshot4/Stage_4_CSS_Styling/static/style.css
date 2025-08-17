@@ -1,0 +1,135 @@
+/* General page setup */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Center container for title, dropdown, and start button */
+#menuContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+/* Spacing between elements */
+#menuContainer > * {
+    margin: 10px 0;
+}
+
+/* Title */
+h1 {
+    font-size: 3em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Dropdown styling */
+label[for="modeSelect"] {
+    font-size: 1.2em;
+    margin-right: 10px;
+    color: #333;
+}
+
+#modeSelect {
+    font-size: 1.1em;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#modeSelect:hover {
+    border-color: #2196F3;
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+}
+
+#modeSelect:focus {
+    outline: none;
+    border-color: #1976D2;
+    box-shadow: 0 0 8px rgba(25, 118, 210, 0.7);
+}
+
+/* Start button styling */
+#startBtn {
+    font-size: 1.5em;
+    padding: 15px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    background-color: #2196F3;
+    color: white;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+#startBtn:hover {
+    background-color: #1976D2;
+    transform: scale(1.05);
+}
+
+/* Flash animation for GO */
+#startBtn.flash {
+    animation: flashBtn 0.5s infinite alternate;
+}
+
+@keyframes flashBtn {
+    from { background-color: #2196F3; }
+    to { background-color: #ffeb3b; color: #333; }
+}
+
+/* Feedback texts */
+#message {
+    font-size: 1.5em;
+    margin-top: 20px;
+}
+
+#bestTime {
+    font-size: 1.2em;
+    margin: 5px 0;
+    color: #333;
+}
+
+/* History table */
+#historyTable {
+    width: 60%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+#historyTable th, #historyTable td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+}
+
+#historyTable th {
+    background-color: #2196F3;
+    color: white;
+}
+
+/* Highlight active button */
+.active-button {
+    background-color: #4CAF50; /* green */
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px #4CAF50;
+}
+
+/* Pop animation for best time */
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+#bestTime.pop {
+    animation: pop 0.3s ease-in-out;
+}
+
+

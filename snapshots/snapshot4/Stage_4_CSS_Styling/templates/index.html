@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reaction Game</title>
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="menuContainer">
+        <h1>Reaction Game</h1>
+
+        <div>
+            <label for="modeSelect">Mode:</label>
+            <select id="modeSelect">
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+        </div>
+
+        <button id="startBtn">Start Round</button>
+
+        <p id="message">Press Start to begin</p>
+        <p id="bestTime">Best time: N/A</p>
+    </div>
+
+    <table id="historyTable">
+        <thead>
+            <tr>
+                <th>Round</th>
+                <th>Mode</th>
+                <th>Reaction Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- History rows will appear here -->
+        </tbody>
+    </table>
+
+    <!-- Confetti library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
