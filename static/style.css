@@ -1,17 +1,14 @@
 /* ===== GENERAL PAGE SETUP ===== */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
     text-align: center;
-    margin: 0;
-    padding: 0;
+    background: #f5f5f5;
 }
 
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 50px;
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
 }
 
 /* ===== TITLE ===== */
@@ -21,48 +18,62 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* ===== START BUTTON ===== */
-#startRoundBtn {
-    font-size: 1.5em;
-    padding: 15px 40px;
-    cursor: pointer;
+.modes, #difficulty-section {
+    margin: 15px 0;
+}
+
+button {
+    margin: 5px;
+    padding: 12px 20px;
+    font-size: 16px;
     border: none;
-    border-radius: 12px;
-    background-color: #2196F3;
+    border-radius: 8px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+/* ===== BUTTON GLOW ===== */
+.glow-green {
+    background: #28a745 !important;
+    box-shadow: 0 0 15px #28a745, 0 0 25px #28a745;
     color: white;
     transition: transform 0.2s, background-color 0.2s;
 }
 
-#startRoundBtn:hover {
-    background-color: #1976D2;
-    transform: scale(1.05);
+button:hover {
+    background: #0056b3;
 }
 
-/* ===== BUTTON CONTAINER ===== */
-.button-container {
-    display: flex;
-    gap: 10px;
+#status-box, #countdown-box {
+    margin: 10px auto;
+    padding: 15px;
+    background: #eee;
+    border-radius: 8px;
+    font-size: 18px;
+    max-width: 500px;
+}
+
+#reaction-box {
     margin: 20px 0;
 }
 
-.game-btn {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+.choices button {
+    width: 120px;
 }
 
-/* Highlight active button */
-.active-button {
-    background-color: #4CAF50;
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 0 10px #4CAF50;
-    transition: all 0.3s ease;
+#results {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
 }
 
-/* ===== STATUS BOXES ===== */
-.status-box {
-    font-size: 1.2em;
-    margin-top: 15px;
-    color: #333;
+.stat-box {
+    background: #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    width: 150px;
+}
+.hidden {
+    display: none;
 }
