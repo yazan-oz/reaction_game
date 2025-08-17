@@ -1,0 +1,68 @@
+/* ===== GENERAL PAGE SETUP ===== */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+/* ===== TITLE ===== */
+h1 {
+    font-size: 3em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* ===== START BUTTON ===== */
+#startRoundBtn {
+    font-size: 1.5em;
+    padding: 15px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    background-color: #2196F3;
+    color: white;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+#startRoundBtn:hover {
+    background-color: #1976D2;
+    transform: scale(1.05);
+}
+
+/* ===== BUTTON CONTAINER ===== */
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.game-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Highlight active button */
+.active-button {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 10px #4CAF50;
+    transition: all 0.3s ease;
+}
+
+/* ===== STATUS BOXES ===== */
+.status-box {
+    font-size: 1.2em;
+    margin-top: 15px;
+    color: #333;
+}
