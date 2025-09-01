@@ -18,74 +18,154 @@
     td { background:#222; }
     #round-counter { margin-top:10px; font-size:20px; color:#f39c12; }
     canvas.confetti { position:fixed; top:0; left:0; pointer-events:none; width:100%; height:100%; z-index:9999; }
-    #metrics { margin:20px; font-size:18px; }
+    
+    /* Enhanced Metrics Styling */
+    .metrics-container { 
+      margin:20px auto; 
+      padding:20px; 
+      background:#1e1e1e; 
+      border-radius:12px; 
+      border:2px solid #2ecc71;
+      max-width:600px;
+    }
+    .metrics-grid { 
+      display:grid; 
+      grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); 
+      gap:15px; 
+      margin-top:10px;
+    }
+    .metric-item { 
+      background:#2a2a2a; 
+      padding:15px; 
+      border-radius:8px; 
+      border-left:4px solid #3498db;
+    }
+    .metric-label { 
+      font-size:14px; 
+      color:#bdc3c7; 
+      margin-bottom:5px;
+    }
+    .metric-value { 
+      font-size:24px; 
+      font-weight:bold; 
+      color:#ecf0f1;
+    }
+    .metric-value.fast { color:#2ecc71; }
+    .metric-value.slow { color:#e74c3c; }
+    .metric-value.perfect { color:#f1c40f; }
+
+    /* Status and Coach Box Styling */
+    .info-boxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+    }
+    .status-box, .coach-box {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #3498db;
+    }
+    .coach-box {
+      border-color: #9b59b6;
+    }
+    .status-box h4, .coach-box h4 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .coach-box h4 {
+      color: #9b59b6;
+    }
   </style>
 </head>
 <body>
-  <h1>Reaction Game</h1>
+  <h1>🎯 Reaction Time Trainer</h1>
 
-  <!-- Mode and Difficulty -->
+  <!-- Mode and Difficulty Controls -->
   <div class="controls">
     <label for="mode">Game Mode:</label>
     <select id="mode">
-      <option value="classic">Classic</option>
-      <option value="unlimited">Unlimited</option>
-      <option value="endurance">Endurance</option>
+      <option value="time_attack">⚡ Time Attack (Score Challenge)</option>
+      <option value="unlimited">♾️ Unlimited (Endless Practice)</option>
+      <option value="endurance">💪 Endurance (5 Rounds)</option>
     </select>
 
     <label for="difficulty">Difficulty:</label>
     <select id="difficulty">
-      <option value="easy">Easy</option>
-      <option value="medium">Medium</option>
-      <option value="hard">Hard</option>
+      <option value="easy">😊 Easy (60s, 2-4s delay)</option>
+      <option value="medium">😐 Medium (45s, 1-3s delay)</option>
+      <option value="hard">😤 Hard (30s, 0.5-2s delay)</option>
     </select>
 
-    <button onclick="startGame()">Start Game</button>
+    <button onclick="startGame()">🚀 Start Game</button>
   </div>
 
-  <!-- Aggregated Metrics -->
-  <div id="metrics">
-    <div>Average Reaction Time: <span id="avg-time">-</span> ms</div>
-    <div>Correct Presses: <span id="correct-count">0</span></div>
-    <div>Wrong Presses: <span id="wrong-count">0</span></div>
-    <div>Highscore: <span id="highscore">-</span> ms</div>
+  <!-- Live Metrics Display -->
+  <div class="metrics-container">
+    <h3 style="margin-top:0; color:#2ecc71;">📊 Live Performance Metrics</h3>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-label">Average Time</div>
+        <div class="metric-value" id="avg-time">-</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label" id="correct-label">✅ Correct</div>
+        <div class="metric-value" id="correct-count">0</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label" id="wrong-label">❌ Wrong</div>
+        <div class="metric-value" id="wrong-count">0</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">🏆 Best Time</div>
+        <div class="metric-value" id="highscore">-</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Countdown Timer -->
-  <div class="countdown" id="countdown">Countdown: 0</div>
-  <div id="round-counter">Round 0</div>
+  <!-- Round Info -->
+  <div class="countdown" id="countdown">Ready to start!</div>
+  <div id="round-counter">Round 0 of 5</div>
 
   <!-- Game Buttons -->
-  <div>
+  <div style="margin: 30px 0;">
     <button class="game-button" id="button1" onclick="handleButtonPress(1)">Button 1</button>
     <button class="game-button" id="button2" onclick="handleButtonPress(2)">Button 2</button>
     <button class="game-button" id="button3" onclick="handleButtonPress(3)">Button 3</button>
   </div>
 
-  <!-- Status + Results -->
-  <div class="status" id="status">Press Start to Play</div>
-  <div class="results" id="results"></div>
+  <!-- Status and Coach Boxes -->
+  <div class="info-boxes">
+    <div class="status-box">
+      <h4>🎮 Game Status</h4>
+      <div id="status">Press Start to Play</div>
+    </div>
+    <div class="coach-box">
+      <h4>🤖 Mini Coach</h4>
+      <div id="coachBox">Your AI coach will guide you here!</div>
+    </div>
+  </div>
 
+  <!-- Results Table -->
+  <div class="results" id="results"></div>
   <table id="attempts-table">
     <thead>
       <tr>
         <th>Round</th>
         <th>Reaction Time (ms)</th>
         <th>Status</th>
+        <th>Points</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <!-- Analytics Chart -->
-  <h2>Analytics</h2>
-  <canvas id="reactionChart" width="600" height="300"></canvas>
-
-  <div id="metrics">
-    <div>Average Reaction Time: <span id="avg-time">-</span> ms</div>
-    <div>Correct Presses: <span id="correct-count">0</span></div>
-    <div>Wrong Presses: <span id="wrong-count">0</span></div>
-    <div>Highscore: <span id="highscore">-</span> ms</div>
+  <h2>📈 Performance Analytics</h2>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <canvas id="reactionChart" width="600" height="300"></canvas>
   </div>
 
   <canvas class="confetti" id="confetti-canvas"></canvas>
@@ -95,11 +175,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Main Game Script -->
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}?v={{ range(1, 10000) | random }}"></script>
 
   <!-- Mini Coach Script -->
-  <script src="{{ url_for('static', filename='coach.js') }}"></script>
+  <script src="{{ url_for('static', filename='coach.js') }}?v={{ range(1, 10000) | random }}"></script>
 
 </body>
 </html>
-
