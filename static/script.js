@@ -282,7 +282,8 @@ function nextRound(){
     // Double check time attack hasn't ended and we have time left
     if(gameMode === "time_attack" && gameTimeLeft <= 0) return;
     
-    targetButton = Math.floor(Math.random()*3)+1;
+    // Changed from 3 buttons to 2 buttons
+    targetButton = Math.floor(Math.random()*2)+1;
     document.getElementById(`button${targetButton}`).classList.add("glow");
     document.getElementById("status").textContent = `🎯 Press Button ${targetButton}!`;
     
@@ -420,7 +421,8 @@ function endGame(){
 
 // ===== Keyboard Input =====
 document.addEventListener("keydown",(e)=>{
-  if(["1","2","3"].includes(e.key)){
+  // Changed from ["1","2","3"] to ["1","2"] for 2-button setup
+  if(["1","2"].includes(e.key)){
     handleButtonPress(parseInt(e.key));
   }
 });
