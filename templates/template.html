@@ -78,10 +78,32 @@
     .coach-box h4 {
       color: #9b59b6;
     }
+
+    /* Physical Button Indicator */
+    .hardware-status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #2ecc71;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    .hardware-status.active {
+      border-color: #f1c40f;
+      box-shadow: 0 0 10px #f1c40f;
+    }
   </style>
 </head>
 <body>
   <h1>🎯 Reaction Time Trainer</h1>
+
+  <!-- Hardware Status Indicator -->
+  <div class="hardware-status" id="hardware-status">
+    🔌 Physical Buttons: <span id="hardware-indicator">Detecting...</span>
+  </div>
 
   <!-- Mode and Difficulty Controls -->
   <div class="controls">
@@ -173,11 +195,231 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Physical Button Polling Script -->
+  <script>
+    // Global variables for physical button integration
+    let gameStatePolling = null;
+    let lastKnownGameState = null;
+    let isPhysicalButtonMode = false;
+
+    // Start polling for game state changes
+    function startGameStatePolling() {
+      if (gameStatePolling) return; // Already polling
+      
+      gameStatePolling = setInterval(async () => {
+        try {
+          // Try the main status endpoint that exists in your Flask app
+          const response = await fetch('/api/status');
+          const gameState = await response.json();
+          
+          // Update hardware status indicator
+          updateHardwareStatus({
+            connected: gameState.hardware_available || gameState.hardware_enabled
+          });
+          
+          // Check if game state changed due to physical button press
+          if (JSON.stringify(gameState) !== JSON.stringify(lastKnownGameState)) {
+            console.log('Game state changed, updating UI:', gameState);
+            updateGameUI(gameState);
+          }
+          
+          lastKnownGameState = {...gameState};
+          
+        } catch (error) {
+          console.log('Polling error (normal if server busy):', error.message);
+        }
+      }, 200); // Poll every 200ms to match your test page
+    }
+
+    // Stop polling when not needed
+    function stopGameStatePolling() {
+      if (gameStatePolling) {
+        clearInterval(gameStatePolling);
+        gameStatePolling = null;
+      }
+    }
+
+    // Update game UI based on server state
+    function updateGameUI(gameState) {
+      // Update game status
+      if (gameState.status && document.getElementById('status')) {
+        document.getElementById('status').textContent = gameState.status;
+      }
+
+      // Update countdown
+      if (gameState.countdown !== undefined && document.getElementById('countdown')) {
+        const countdownEl = document.getElementById('countdown');
+        if (gameState.countdown > 0) {
+          countdownEl.textContent = `Get ready... ${gameState.countdown}`;
+        } else if (gameState.countdown === 0) {
+          countdownEl.textContent = 'GO!';
+        }
+      }
+
+      // Update button glow states
+      const button1 = document.getElementById('button1');
+      const button2 = document.getElementById('button2');
+      
+      if (gameState.target_button === 1) {
+        button1.classList.add('glow');
+        button2.classList.remove('glow');
+      } else if (gameState.target_button === 2) {
+        button2.classList.add('glow');
+        button1.classList.remove('glow');
+      } else {
+        button1.classList.remove('glow');
+        button2.classList.remove('glow');
+      }
+
+      // Update round counter
+      if (gameState.current_round !== undefined && document.getElementById('round-counter')) {
+        const totalRounds = gameState.total_rounds || 5;
+        document.getElementById('round-counter').textContent = 
+          `Round ${gameState.current_round} of ${totalRounds}`;
+      }
+
+      // Update metrics if available
+      if (gameState.metrics) {
+        updateMetrics(gameState.metrics);
+      }
+
+      // Update attempts table if new attempt
+      if (gameState.last_attempt && gameState.last_attempt.just_added) {
+        addAttemptToTable(gameState.last_attempt);
+      }
+
+      // Handle game completion
+      if (gameState.game_complete) {
+        handleGameComplete(gameState);
+      }
+
+      // Trigger coach updates if available
+      if (typeof updateCoach === 'function' && gameState.last_attempt) {
+        updateCoach(gameState.last_attempt);
+      }
+    }
+
+    // Update hardware status indicator
+    function updateHardwareStatus(hardwareStatus) {
+      const indicator = document.getElementById('hardware-indicator');
+      const statusBox = document.getElementById('hardware-status');
+      
+      if (hardwareStatus && hardwareStatus.connected) {
+        indicator.textContent = 'Connected ✅';
+        statusBox.classList.remove('active');
+        isPhysicalButtonMode = true;
+      } else {
+        indicator.textContent = 'Disconnected ❌';
+        statusBox.classList.add('active');
+        isPhysicalButtonMode = false;
+      }
+    }
+
+    // Update metrics display
+    function updateMetrics(metrics) {
+      if (metrics.avg_time !== undefined) {
+        const avgEl = document.getElementById('avg-time');
+        avgEl.textContent = metrics.avg_time + 'ms';
+        avgEl.className = 'metric-value ' + (metrics.avg_time < 300 ? 'fast' : metrics.avg_time > 600 ? 'slow' : '');
+      }
+      
+      if (metrics.correct_count !== undefined) {
+        document.getElementById('correct-count').textContent = metrics.correct_count;
+      }
+      
+      if (metrics.wrong_count !== undefined) {
+        document.getElementById('wrong-count').textContent = metrics.wrong_count;
+      }
+      
+      if (metrics.best_time !== undefined) {
+        const bestEl = document.getElementById('highscore');
+        bestEl.textContent = metrics.best_time + 'ms';
+        bestEl.className = 'metric-value perfect';
+      }
+    }
+
+    // Add attempt to results table
+    function addAttemptToTable(attempt) {
+      const tableBody = document.querySelector('#attempts-table tbody');
+      const row = tableBody.insertRow();
+      
+      row.insertCell(0).textContent = attempt.round || '';
+      row.insertCell(1).textContent = attempt.reaction_time ? attempt.reaction_time + 'ms' : 'Too early!';
+      row.insertCell(2).textContent = attempt.correct ? '✅ Correct' : '❌ Wrong';
+      row.insertCell(3).textContent = attempt.points || '0';
+      
+      // Scroll to show latest attempt
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Handle game completion
+    function handleGameComplete(gameState) {
+      stopGameStatePolling();
+      
+      if (gameState.final_results) {
+        // Trigger confetti for good performance
+        if (gameState.final_results.avg_time && gameState.final_results.avg_time < 400) {
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          }
+        }
+      }
+    }
+
+    // Enhanced handleButtonPress that works with both physical and virtual buttons
+    function handleButtonPress(buttonNumber) {
+      // If this is called from a virtual button, we still want to process it normally
+      // The polling will detect any physical button presses automatically
+      
+      // Call the original handler from script.js if it exists
+      if (typeof window.originalHandleButtonPress === 'function') {
+        window.originalHandleButtonPress(buttonNumber);
+      }
+    }
+
+    // Enhanced startGame function
+    function startGame() {
+      // Call the original startGame from script.js if it exists
+      if (typeof window.originalStartGame === 'function') {
+        window.originalStartGame();
+      }
+      
+      // Start polling for physical button presses
+      startGameStatePolling();
+    }
+
+    // Auto-start polling when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Starting physical button integration...');
+      startGameStatePolling();
+    });
+
+    // Clean up polling when page unloads
+    window.addEventListener('beforeunload', function() {
+      stopGameStatePolling();
+    });
+  </script>
+
   <!-- Main Game Script -->
   <script src="{{ url_for('static', filename='script.js') }}?v={{ range(1, 10000) | random }}"></script>
 
   <!-- Mini Coach Script -->
   <script src="{{ url_for('static', filename='coach.js') }}?v={{ range(1, 10000) | random }}"></script>
+
+  <!-- Integration Script - Load after main scripts -->
+  <script>
+    // Store original functions to avoid conflicts
+    if (typeof handleButtonPress !== 'undefined') {
+      window.originalHandleButtonPress = handleButtonPress;
+    }
+    if (typeof startGame !== 'undefined') {
+      window.originalStartGame = startGame;
+    }
+  </script>
 
 </body>
 </html>
