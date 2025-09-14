@@ -1,0 +1,168 @@
+/* ===== GENERAL PAGE SETUP ===== */
+    body { font-family: Arial; text-align:center; background:#121212; color:white; margin:0; padding:0; }
+    h1,h2 { margin-top:20px; }
+    .controls { margin:20px 0; }
+    .game-button { padding:20px 40px; margin:20px; font-size:20px; border:none; border-radius:12px; cursor:pointer; background:#333; color:white; transition: box-shadow 0.3s, background 0.3s, transform 0.2s; }
+    .game-button.glow { background:#2ecc71; box-shadow:0 0 20px #2ecc71,0 0 40px #2ecc71; transform:scale(1.1); }
+    .status { margin-top:20px; font-size:20px; }
+    .countdown { margin:20px 0; font-size:24px; color:#f1c40f; }
+    .results { margin-top:20px; font-size:18px; }
+    table { margin:20px auto; border-collapse:collapse; width:60%; }
+    th, td { border:1px solid #444; padding:8px; font-size:16px; }
+    th { background:#333; }
+    td { background:#222; }
+    #round-counter { margin-top:10px; font-size:20px; color:#f39c12; }
+    canvas.confetti { position:fixed; top:0; left:0; pointer-events:none; width:100%; height:100%; z-index:9999; }
+    
+    /* Enhanced Metrics Styling */
+    .metrics-container { 
+      margin:20px auto; 
+      padding:20px; 
+      background:#1e1e1e; 
+      border-radius:12px; 
+      border:2px solid #2ecc71;
+      max-width:600px;
+    }
+    .metrics-grid { 
+      display:grid; 
+      grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); 
+      gap:15px; 
+      margin-top:10px;
+    }
+    .metric-item { 
+      background:#2a2a2a; 
+      padding:15px; 
+      border-radius:8px; 
+      border-left:4px solid #3498db;
+    }
+    .metric-label { 
+      font-size:14px; 
+      color:#bdc3c7; 
+      margin-bottom:5px;
+    }
+    .metric-value { 
+      font-size:24px; 
+      font-weight:bold; 
+      color:#ecf0f1;
+    }
+    .metric-value.fast { color:#2ecc71; }
+    .metric-value.slow { color:#e74c3c; }
+    .metric-value.perfect { color:#f1c40f; }
+
+    /* Status and Coach Box Styling */
+    .info-boxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+    }
+    .status-box, .coach-box {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #3498db;
+    }
+    .coach-box {
+      border-color: #9b59b6;
+    }
+    .status-box h4, .coach-box h4 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .coach-box h4 {
+      color: #9b59b6;
+    }
+
+    /* Physical Button Indicator */
+    .hardware-status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #2ecc71;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    .hardware-status.disconnected {
+      border-color: #e74c3c;
+      box-shadow: 0 0 10px #e74c3c;
+    }
+
+
+.container {
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ===== TITLE ===== */
+h1 {
+    font-size: 3em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.modes, #difficulty-section {
+    margin: 15px 0;
+}
+
+button {
+    margin: 5px;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+/* ===== BUTTON GLOW ===== */
+.glow-green {
+    background: #28a745 !important;
+    box-shadow: 0 0 15px #28a745, 0 0 25px #28a745;
+    color: white;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+#status-box, #countdown-box {
+    margin: 10px auto;
+    padding: 15px;
+    background: #eee;
+    border-radius: 8px;
+    font-size: 18px;
+    max-width: 500px;
+}
+
+#reaction-box {
+    margin: 20px 0;
+}
+
+.choices button {
+    width: 120px;
+}
+
+#results {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.stat-box {
+    background: #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    width: 150px;
+}
+.hidden {
+    display: none;
+}
+.button-container { margin: 30px 0; }
+.chart-container { max-width: 800px; margin: 0 auto; }
