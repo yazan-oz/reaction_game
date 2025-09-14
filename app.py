@@ -65,11 +65,17 @@ def hardware_button_pressed(button_id):
     if game_state["waiting_for_press"] and not game_state["tension_building"]:
         handle_button_press(button_id)
     else:
-        log_app(f"Button {button_id} ignored - game not waiting or tension building")
+        if game_state["tension_building"]:
+            log_app(f"Button {button_id} ignored - tension still building")
+        elif not game_state["waiting_for_press"]:
+            log_app(f"Button {button_id} ignored - game not waiting for input")
+        else:
+            log_app(f"Button {button_id} ignored - unknown state")
 
 def handle_button_press(button_id):
     """Handle button press logic"""
     if not game_state["waiting_for_press"]:
+        log_app("Button press rejected - not waiting")
         return {"error": "Not waiting for button press"}
     
     reaction_time = int((time.time() - game_state["start_time"]) * 1000)
@@ -85,14 +91,14 @@ def handle_button_press(button_id):
         game_state["round"] += 1
         game_state["waiting_for_press"] = False
         game_state["tension_building"] = False
-        log_app(f"Correct button press - reaction time: {reaction_time}ms")
+        log_app(f"✅ CORRECT button press - reaction time: {reaction_time}ms")
     else:
         game_state["last_message"] = f"❌ Wrong button! Expected {game_state['current_button']}"
         game_state["waiting_for_press"] = False
         game_state["tension_building"] = False
         if HARDWARE_ENABLED and hardware:
             hardware.snap_back()
-        log_app(f"Wrong button press - expected {game_state['current_button']}, got {button_id}")
+        log_app(f"❌ WRONG button press - expected {game_state['current_button']}, got {button_id}")
     
     return game_state
 
@@ -110,232 +116,6 @@ if HARDWARE_ENABLED and hardware:
     except Exception as e:
         log_app(f"Error setting up hardware callbacks: {e}")
         HARDWARE_ENABLED = False
-
-@app.route("/test")
-def test_page():
-    """Test page for physical buttons"""
-    return '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Physical Button Test</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px;
-            background: #1a1a1a;
-            color: #ffffff;
-        }
-        .status {
-            background: #333;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        .button {
-            background: #4CAF50;
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            font-size: 16px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-        .button:hover { background: #45a049; }
-        .button:disabled { 
-            background: #666; 
-            cursor: not-allowed; 
-        }
-        .logs {
-            background: #222;
-            border: 1px solid #444;
-            padding: 10px;
-            height: 300px;
-            overflow-y: scroll;
-            font-family: monospace;
-            font-size: 12px;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-    </style>
-</head>
-<body>
-    <h1>Physical Button Test</h1>
-    
-    <div class="status">
-        <h3>Game Status</h3>
-        <div id="gameStatus">Waiting to start...</div>
-        <div id="gameMessage"></div>
-        <div id="gameRound">Round: 0</div>
-        <div id="bestTime">Best time: None</div>
-    </div>
-    
-    <div class="status">
-        <h3>Hardware Status</h3>
-        <div id="hardwareStatus">Checking...</div>
-        <div id="buttonStates">Button states: Checking...</div>
-    </div>
-    
-    <div>
-        <button class="button" onclick="startRound()">Start Round</button>
-        <button class="button" onclick="testButton(1)">Test Virtual Button 1</button>
-        <button class="button" onclick="testButton(2)">Test Virtual Button 2</button>
-        <button class="button" onclick="resetGame()">Reset Game</button>
-    </div>
-    
-    <div class="status">
-        <h3>Instructions</h3>
-        <ol>
-            <li>Click "Start Round"</li>
-            <li>Wait for the countdown/tension period (2-4 seconds)</li>
-            <li>When a button is announced, press your PHYSICAL button</li>
-            <li>The logs below will show if your physical button is detected</li>
-        </ol>
-        
-        <p><strong>Physical Button Test:</strong> Press your physical buttons anytime to see if they're detected (will show in logs even if game isn't running)</p>
-    </div>
-    
-    <div class="status">
-        <h3>Real-time Logs</h3>
-        <div class="logs" id="logs"></div>
-    </div>
-
-    <script>
-        let gameState = {};
-        
-        function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logs = document.getElementById('logs');
-            logs.innerHTML += `[${timestamp}] ${message}\\n`;
-            logs.scrollTop = logs.scrollHeight;
-        }
-        
-        function updateDisplay() {
-            document.getElementById('gameStatus').textContent = 
-                gameState.waiting_for_press ? 
-                (gameState.tension_building ? 'Building tension...' : `Waiting for Button ${gameState.current_button}`) : 
-                'Ready to start';
-                
-            document.getElementById('gameMessage').textContent = gameState.last_message || '';
-            document.getElementById('gameRound').textContent = `Round: ${gameState.round || 0}`;
-            document.getElementById('bestTime').textContent = `Best time: ${gameState.best_time ? gameState.best_time + 'ms' : 'None'}`;
-        }
-        
-        async function fetchGameState() {
-            try {
-                const response = await fetch('/api/status');
-                const data = await response.json();
-                
-                // Check if game state changed
-                const stateChanged = JSON.stringify(gameState) !== JSON.stringify(data);
-                if (stateChanged) {
-                    const oldWaiting = gameState.waiting_for_press;
-                    const oldTension = gameState.tension_building;
-                    const oldMessage = gameState.last_message;
-                    
-                    gameState = data;
-                    updateDisplay();
-                    
-                    // Log important state changes
-                    if (data.waiting_for_press && !data.tension_building && (oldTension || !oldWaiting)) {
-                        log(`🎯 Ready for Button ${data.current_button}! Press your physical button now!`);
-                    }
-                    if (data.last_message && data.last_message !== oldMessage) {
-                        if (data.last_message.includes('Correct!')) {
-                            log(`✅ ${data.last_message}`);
-                        } else if (data.last_message.includes('Wrong')) {
-                            log(`❌ ${data.last_message}`);
-                        } else {
-                            log(`📝 ${data.last_message}`);
-                        }
-                    }
-                }
-            } catch (error) {
-                log(`Error fetching game state: ${error.message}`);
-            }
-        }
-        
-        async function fetchHardwareStatus() {
-            try {
-                const response = await fetch('/api/test_buttons');
-                const data = await response.json();
-                
-                if (data.hardware_available) {
-                    document.getElementById('hardwareStatus').textContent = '✅ Hardware Available';
-                    document.getElementById('buttonStates').textContent = 
-                        `Pin ${data.button_1_pin}: ${data.button_1_state}, Pin ${data.button_2_pin}: ${data.button_2_state}`;
-                } else {
-                    document.getElementById('hardwareStatus').textContent = '❌ Hardware Not Available';
-                    document.getElementById('buttonStates').textContent = data.error || 'No hardware detected';
-                }
-            } catch (error) {
-                document.getElementById('hardwareStatus').textContent = '❌ Hardware Check Failed';
-                document.getElementById('buttonStates').textContent = error.message;
-            }
-        }
-        
-        async function startRound() {
-            try {
-                log('🚀 Starting new round...');
-                const response = await fetch('/api/start_round', { method: 'POST' });
-                const data = await response.json();
-                gameState = data;
-                updateDisplay();
-                log(`Round started - target button: ${data.current_button}`);
-                log('⏳ Tension building... wait for the signal!');
-            } catch (error) {
-                log(`Error starting round: ${error.message}`);
-            }
-        }
-        
-        async function testButton(buttonId) {
-            try {
-                log(`🖱️ Testing virtual button ${buttonId}...`);
-                const response = await fetch(`/api/buttons/${buttonId}/press`, { method: 'POST' });
-                const data = await response.json();
-                gameState = data;
-                updateDisplay();
-            } catch (error) {
-                log(`Error testing button: ${error.message}`);
-            }
-        }
-        
-        function resetGame() {
-            log('🔄 Game reset');
-            gameState = {
-                round: 0,
-                waiting_for_press: false,
-                current_button: null,
-                last_message: "Game reset",
-                best_time: null,
-                tension_building: false
-            };
-            updateDisplay();
-        }
-        
-        // Update every 200ms for real-time feel
-        setInterval(fetchGameState, 200);
-        
-        // Update hardware status every 2 seconds
-        setInterval(fetchHardwareStatus, 2000);
-        
-        // Initial load
-        fetchGameState();
-        fetchHardwareStatus();
-        
-        log('🎮 Physical Button Test loaded');
-        log('📝 Press physical buttons anytime to test detection');
-        log('🎯 Start a round and press physical buttons when prompted');
-    </script>
-</body>
-</html>'''
 
 @app.route("/")
 def index():
@@ -359,47 +139,30 @@ def press_button(button_id):
 
 @app.route("/api/start_round", methods=["POST"])
 def start_round():
+    """Start a new round - accepts target_button from JavaScript to sync game states"""
     global game_state
-    game_state["current_button"] = random.choice([1, 2])
-    game_state["waiting_for_press"] = True
-    game_state["last_message"] = f"Get ready... Press Button {game_state['current_button']} when it glows!"
-    game_state["start_time"] = time.time()
-    game_state["tension_building"] = True
     
-    log_app(f"Round started - target button: {game_state['current_button']}")
-
-    if HARDWARE_ENABLED and hardware:
-        # Run tension animation in a background thread
-        def run_tension():
-            try:
-                tension_duration = random.uniform(2.0, 4.0)
-                hardware.tension_build_animation(tension_duration)
-                game_state["tension_building"] = False
-                log_app("Hardware tension animation complete")
-            except Exception as e:
-                log_app(f"Error in tension animation: {e}")
-                game_state["tension_building"] = False
-
-        threading.Thread(target=run_tension, daemon=True).start()
-    else:
-        # In software mode, simulate short delay
-        def run_tension_software():
-            try:
-                duration = random.uniform(2.0, 4.0)
-                time.sleep(duration)
-                game_state["tension_building"] = False
-                log_app("Software tension delay complete")
-            except Exception as e:
-                log_app(f"Error in software tension: {e}")
-                game_state["tension_building"] = False
-
-        threading.Thread(target=run_tension_software, daemon=True).start()
+    # Get target button from request, or choose randomly if not provided
+    data = request.get_json() if request.is_json else {}
+    target_button = data.get('target_button') if data else None
+    
+    if target_button is None:
+        target_button = random.choice([1, 2])
+    
+    game_state["current_button"] = target_button
+    game_state["waiting_for_press"] = True
+    game_state["last_message"] = f"Ready for Button {game_state['current_button']}!"
+    game_state["start_time"] = time.time()
+    game_state["tension_building"] = False  # No tension - ready immediately
+    
+    sync_source = "JavaScript" if target_button == data.get('target_button') else "Flask random"
+    log_app(f"🎯 Round started - target button: {game_state['current_button']} (from {sync_source}) - READY IMMEDIATELY")
 
     return jsonify(game_state)
 
 @app.route("/api/status", methods=["GET"])
 def get_status():
-    # Add hardware status to game state
+    """Get current game state with hardware status"""
     status = game_state.copy()
     status["hardware_enabled"] = HARDWARE_ENABLED
     if HARDWARE_ENABLED and hardware:
@@ -458,6 +221,8 @@ def test_buttons():
             "error": "Hardware not available",
             "hardware_available": False
         })
+
+@app.route("/api/hardware_diagnostics", methods=["GET"])
 def hardware_diagnostics():
     """Get hardware diagnostic information"""
     diagnostics = {

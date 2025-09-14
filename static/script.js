@@ -426,3 +426,20 @@ document.addEventListener("keydown",(e)=>{
     handleButtonPress(parseInt(e.key));
   }
 });
+// Physical button integration - add to END of script.js
+const originalNextRound = nextRound;
+nextRound = function() {
+  const result = originalNextRound.apply(this, arguments);
+  
+  // Sync with Flask after JavaScript sets targetButton
+  setTimeout(() => {
+    if (targetButton && typeof window.syncFlaskRound === 'function') {
+      console.log(`JavaScript starting round - syncing target button ${targetButton} with Flask`);
+      window.syncFlaskRound(targetButton);
+    }
+  }, 100);
+  
+  return result;
+};
+
+console.log('Physical button sync added to nextRound');

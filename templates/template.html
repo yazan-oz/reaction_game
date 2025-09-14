@@ -91,9 +91,9 @@
       font-size: 12px;
       z-index: 1000;
     }
-    .hardware-status.active {
-      border-color: #f1c40f;
-      box-shadow: 0 0 10px #f1c40f;
+    .hardware-status.disconnected {
+      border-color: #e74c3c;
+      box-shadow: 0 0 10px #e74c3c;
     }
   </style>
 </head>
@@ -195,212 +195,96 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Physical Button Polling Script -->
+  <!-- Physical Button Integration Script -->
   <script>
-    // Global variables for physical button integration
-    let gameStatePolling = null;
-    let lastKnownGameState = null;
-    let isPhysicalButtonMode = false;
+    // Global function for syncing JavaScript game state with Flask
+    window.syncFlaskRound = async function(targetButton) {
+      try {
+        console.log(`Syncing Flask: target button ${targetButton}`);
+        
+        const response = await fetch('/api/start_round', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_button: targetButton })
+        });
+        
+        if (response.ok) {
+          console.log('Flask round synced successfully');
+        } else {
+          console.log('Flask sync failed:', response.status);
+        }
+      } catch (error) {
+        console.log('Flask sync error:', error);
+      }
+    };
 
-    // Start polling for game state changes
-    function startGameStatePolling() {
-      if (gameStatePolling) return; // Already polling
+    // Polling system for hardware button detection
+    let gameStatePolling = null;
+    let lastKnownState = null;
+
+    function startPolling() {
+      if (gameStatePolling) return;
       
       gameStatePolling = setInterval(async () => {
         try {
-          // Try the main status endpoint that exists in your Flask app
           const response = await fetch('/api/status');
           const gameState = await response.json();
           
           // Update hardware status indicator
-          updateHardwareStatus({
-            connected: gameState.hardware_available || gameState.hardware_enabled
-          });
+          updateHardwareStatus(gameState);
           
-          // Check if game state changed due to physical button press
-          if (JSON.stringify(gameState) !== JSON.stringify(lastKnownGameState)) {
-            console.log('Game state changed, updating UI:', gameState);
-            updateGameUI(gameState);
+          // Check if Flask processed a hardware button press
+          if (gameState.waiting_for_press === false && 
+              gameState.last_message && 
+              (gameState.last_message.includes('Correct!') || gameState.last_message.includes('Wrong'))) {
+            
+            // If this is a new result, trigger JavaScript button handler
+            if (JSON.stringify(gameState) !== JSON.stringify(lastKnownState)) {
+              console.log('Hardware button result detected:', gameState.last_message);
+              
+              // Extract which button was pressed from Flask result
+              let buttonPressed = null;
+              if (gameState.last_message.includes('Expected 1')) {
+                buttonPressed = 2; // Wrong button
+              } else if (gameState.last_message.includes('Expected 2')) {
+                buttonPressed = 1; // Wrong button
+              } else if (gameState.current_button) {
+                buttonPressed = gameState.current_button; // Correct button
+              }
+              
+              // Call JavaScript game logic
+              if (buttonPressed && typeof handleButtonPress === 'function') {
+                console.log(`Bridging hardware button ${buttonPressed} to JavaScript game`);
+                handleButtonPress(buttonPressed);
+              }
+            }
           }
           
-          lastKnownGameState = {...gameState};
+          lastKnownState = {...gameState};
           
         } catch (error) {
-          console.log('Polling error (normal if server busy):', error.message);
+          // Silently ignore polling errors
         }
-      }, 200); // Poll every 200ms to match your test page
+      }, 200);
     }
 
-    // Stop polling when not needed
-    function stopGameStatePolling() {
-      if (gameStatePolling) {
-        clearInterval(gameStatePolling);
-        gameStatePolling = null;
-      }
-    }
-
-    // Update game UI based on server state
-    function updateGameUI(gameState) {
-      // Update game status
-      if (gameState.status && document.getElementById('status')) {
-        document.getElementById('status').textContent = gameState.status;
-      }
-
-      // Update countdown
-      if (gameState.countdown !== undefined && document.getElementById('countdown')) {
-        const countdownEl = document.getElementById('countdown');
-        if (gameState.countdown > 0) {
-          countdownEl.textContent = `Get ready... ${gameState.countdown}`;
-        } else if (gameState.countdown === 0) {
-          countdownEl.textContent = 'GO!';
-        }
-      }
-
-      // Update button glow states
-      const button1 = document.getElementById('button1');
-      const button2 = document.getElementById('button2');
-      
-      if (gameState.target_button === 1) {
-        button1.classList.add('glow');
-        button2.classList.remove('glow');
-      } else if (gameState.target_button === 2) {
-        button2.classList.add('glow');
-        button1.classList.remove('glow');
-      } else {
-        button1.classList.remove('glow');
-        button2.classList.remove('glow');
-      }
-
-      // Update round counter
-      if (gameState.current_round !== undefined && document.getElementById('round-counter')) {
-        const totalRounds = gameState.total_rounds || 5;
-        document.getElementById('round-counter').textContent = 
-          `Round ${gameState.current_round} of ${totalRounds}`;
-      }
-
-      // Update metrics if available
-      if (gameState.metrics) {
-        updateMetrics(gameState.metrics);
-      }
-
-      // Update attempts table if new attempt
-      if (gameState.last_attempt && gameState.last_attempt.just_added) {
-        addAttemptToTable(gameState.last_attempt);
-      }
-
-      // Handle game completion
-      if (gameState.game_complete) {
-        handleGameComplete(gameState);
-      }
-
-      // Trigger coach updates if available
-      if (typeof updateCoach === 'function' && gameState.last_attempt) {
-        updateCoach(gameState.last_attempt);
-      }
-    }
-
-    // Update hardware status indicator
-    function updateHardwareStatus(hardwareStatus) {
+    function updateHardwareStatus(gameState) {
       const indicator = document.getElementById('hardware-indicator');
       const statusBox = document.getElementById('hardware-status');
       
-      if (hardwareStatus && hardwareStatus.connected) {
+      if (gameState.hardware_available) {
         indicator.textContent = 'Connected ✅';
-        statusBox.classList.remove('active');
-        isPhysicalButtonMode = true;
+        statusBox.classList.remove('disconnected');
       } else {
         indicator.textContent = 'Disconnected ❌';
-        statusBox.classList.add('active');
-        isPhysicalButtonMode = false;
+        statusBox.classList.add('disconnected');
       }
     }
 
-    // Update metrics display
-    function updateMetrics(metrics) {
-      if (metrics.avg_time !== undefined) {
-        const avgEl = document.getElementById('avg-time');
-        avgEl.textContent = metrics.avg_time + 'ms';
-        avgEl.className = 'metric-value ' + (metrics.avg_time < 300 ? 'fast' : metrics.avg_time > 600 ? 'slow' : '');
-      }
-      
-      if (metrics.correct_count !== undefined) {
-        document.getElementById('correct-count').textContent = metrics.correct_count;
-      }
-      
-      if (metrics.wrong_count !== undefined) {
-        document.getElementById('wrong-count').textContent = metrics.wrong_count;
-      }
-      
-      if (metrics.best_time !== undefined) {
-        const bestEl = document.getElementById('highscore');
-        bestEl.textContent = metrics.best_time + 'ms';
-        bestEl.className = 'metric-value perfect';
-      }
-    }
-
-    // Add attempt to results table
-    function addAttemptToTable(attempt) {
-      const tableBody = document.querySelector('#attempts-table tbody');
-      const row = tableBody.insertRow();
-      
-      row.insertCell(0).textContent = attempt.round || '';
-      row.insertCell(1).textContent = attempt.reaction_time ? attempt.reaction_time + 'ms' : 'Too early!';
-      row.insertCell(2).textContent = attempt.correct ? '✅ Correct' : '❌ Wrong';
-      row.insertCell(3).textContent = attempt.points || '0';
-      
-      // Scroll to show latest attempt
-      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    // Handle game completion
-    function handleGameComplete(gameState) {
-      stopGameStatePolling();
-      
-      if (gameState.final_results) {
-        // Trigger confetti for good performance
-        if (gameState.final_results.avg_time && gameState.final_results.avg_time < 400) {
-          if (typeof confetti === 'function') {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-          }
-        }
-      }
-    }
-
-    // Enhanced handleButtonPress that works with both physical and virtual buttons
-    function handleButtonPress(buttonNumber) {
-      // If this is called from a virtual button, we still want to process it normally
-      // The polling will detect any physical button presses automatically
-      
-      // Call the original handler from script.js if it exists
-      if (typeof window.originalHandleButtonPress === 'function') {
-        window.originalHandleButtonPress(buttonNumber);
-      }
-    }
-
-    // Enhanced startGame function
-    function startGame() {
-      // Call the original startGame from script.js if it exists
-      if (typeof window.originalStartGame === 'function') {
-        window.originalStartGame();
-      }
-      
-      // Start polling for physical button presses
-      startGameStatePolling();
-    }
-
-    // Auto-start polling when page loads
+    // Start polling when page loads
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('Starting physical button integration...');
-      startGameStatePolling();
-    });
-
-    // Clean up polling when page unloads
-    window.addEventListener('beforeunload', function() {
-      stopGameStatePolling();
+      console.log('Physical button integration ready');
+      startPolling();
     });
   </script>
 
@@ -410,15 +294,46 @@
   <!-- Mini Coach Script -->
   <script src="{{ url_for('static', filename='coach.js') }}?v={{ range(1, 10000) | random }}"></script>
 
-  <!-- Integration Script - Load after main scripts -->
+  <!-- Script Integration - Must load after main scripts -->
   <script>
-    // Store original functions to avoid conflicts
-    if (typeof handleButtonPress !== 'undefined') {
-      window.originalHandleButtonPress = handleButtonPress;
-    }
-    if (typeof startGame !== 'undefined') {
-      window.originalStartGame = startGame;
-    }
+    // Monitor DOM for button glow changes to detect when round starts
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Setting up DOM-based sync detection...');
+      
+      // Watch for button glow changes using MutationObserver
+      const button1 = document.getElementById('button1');
+      const button2 = document.getElementById('button2');
+      
+      if (button1 && button2) {
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              const target = mutation.target;
+              
+              // Check if a button just started glowing
+              if (target.classList.contains('glow')) {
+                let targetButton = null;
+                if (target.id === 'button1') targetButton = 1;
+                if (target.id === 'button2') targetButton = 2;
+                
+                if (targetButton && typeof window.syncFlaskRound === 'function') {
+                  console.log(`Button ${targetButton} started glowing - syncing with Flask`);
+                  window.syncFlaskRound(targetButton);
+                }
+              }
+            }
+          });
+        });
+        
+        // Start observing both buttons for class changes
+        observer.observe(button1, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(button2, { attributes: true, attributeFilter: ['class'] });
+        
+        console.log('DOM-based sync detection active - watching for button glow');
+      } else {
+        console.log('Could not find buttons for DOM monitoring');
+      }
+    });
   </script>
 
 </body>
