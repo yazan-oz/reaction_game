@@ -209,7 +209,7 @@ MIT License - See LICENSE file for details
 
 ## Author
 
-**Yazan** - High school student exploring embedded systems and web development
+**Yazen Alhamashi** - High school student exploring embedded systems and web development
 
 ---
 
