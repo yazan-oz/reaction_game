@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify, request
+import os
 import time
 import random
 import threading
@@ -302,4 +303,6 @@ if __name__ == "__main__":
         log_app("For hardware mode, try: python3 app.py --no-debug")
     log_app("=" * 50)
     
-    app.run(host="0.0.0.0", port=5000, debug=debug_mode)
+    if __name__ == '__main__':
+        port = int(os.environ.get('PORT', 5000))
+        app.run(host="0.0.0.0", port=5000, debug=debug_mode)
