@@ -9,17 +9,40 @@
     body { font-family: Arial; text-align:center; background:#121212; color:white; margin:0; padding:0; }
     h1,h2 { margin-top:20px; }
     .controls { margin:20px 0; }
-    .game-button { padding:20px 40px; margin:20px; font-size:20px; border:none; border-radius:12px; cursor:pointer; background:#333; color:white; transition: box-shadow 0.3s, background 0.3s, transform 0.2s; }
-    .game-button.glow { background:#2ecc71; box-shadow:0 0 20px #2ecc71,0 0 40px #2ecc71; transform:scale(1.1); }
-    .status { margin-top:20px; font-size:20px; }
-    .countdown { margin:20px 0; font-size:24px; color:#f1c40f; }
-    .results { margin-top:20px; font-size:18px; }
+    .game-button { 
+  padding:20px 40px; 
+  margin:20px; 
+  font-size:40px; 
+  border:none; 
+  border-radius:12px; 
+  cursor:pointer; 
+  background:#333;
+  color:white; 
+  transition: none; /* Remove animations */
+}
+.game-button.glow { 
+  background:#2ecc71; /* Simple green */
+  box-shadow: none; /* No glow effect */
+  transform: none; /* No scaling */
+}
+    .countdown { margin:20px 0; font-size:34px; color:#f1c40f; }
+    .results { margin-top:20px; font-size:28px; }
     table { margin:20px auto; border-collapse:collapse; width:60%; }
-    th, td { border:1px solid #444; padding:8px; font-size:16px; }
+    th, td { border:1px solid #444; padding:8px; font-size:24px; }
     th { background:#333; }
     td { background:#222; }
-    #round-counter { margin-top:10px; font-size:20px; color:#f39c12; }
-    canvas.confetti { position:fixed; top:0; left:0; pointer-events:none; width:100%; height:100%; z-index:9999; }
+    #round-counter { margin-top:10px; font-size:30px; color:#f39c12; }
+    #screen-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(46, 204, 113, 0.5);
+  display: none;
+  z-index: 10000;
+  pointer-events: none;
+}
     
     /* Enhanced Metrics Styling */
     .metrics-container { 
@@ -43,12 +66,12 @@
       border-left:4px solid #3498db;
     }
     .metric-label { 
-      font-size:14px; 
+      font-size:28px; 
       color:#bdc3c7; 
       margin-bottom:5px;
     }
     .metric-value { 
-      font-size:24px; 
+      font-size:34px; 
       font-weight:bold; 
       color:#ecf0f1;
     }
@@ -90,7 +113,7 @@
       padding: 10px;
       border-radius: 8px;
       border: 2px solid #2ecc71;
-      font-size: 12px;
+      font-size: 22px;
       z-index: 1000;
     }
     .hardware-status.disconnected {
@@ -104,35 +127,35 @@
   </style>
 </head>
 <body>
-  <h1>🎯 Reaction Time Trainer</h1>
+  <h1> Reaction Time Trainer</h1>
 
   <!-- Hardware Status Indicator -->
   <div class="hardware-status" id="hardware-status">
-    🔌 Physical Buttons: <span id="hardware-indicator">Detecting...</span>
+    Physical Buttons: <span id="hardware-indicator">Detecting...</span>
   </div>
 
   <!-- Mode and Difficulty Controls -->
   <div class="controls">
     <label for="mode">Game Mode:</label>
     <select id="mode">
-      <option value="time_attack">⚡ Time Attack (Score Challenge)</option>
-      <option value="unlimited">♾️ Unlimited (Endless Practice)</option>
-      <option value="endurance">💪 Endurance (5 Rounds)</option>
+      <option value="time_attack"> Time Attack (Score Challenge)</option>
+      <option value="unlimited"> Unlimited (Endless Practice)</option>
+      <option value="endurance"> Endurance (5 Rounds)</option>
     </select>
 
     <label for="difficulty">Difficulty:</label>
     <select id="difficulty">
-      <option value="easy">😊 Easy (60s, 2-4s delay)</option>
-      <option value="medium">😐 Medium (45s, 1-3s delay)</option>
-      <option value="hard">😤 Hard (30s, 0.5-2s delay)</option>
+      <option value="easy"> Easy (60s, 2-4s delay)</option>
+      <option value="medium"> Medium (45s, 1-3s delay)</option>
+      <option value="hard"> Hard (30s, 0.5-2s delay)</option>
     </select>
 
-    <button onclick="startGame()">🚀 Start Game</button>
+    <button onclick="startGame()"> Start Game</button>
   </div>
 
   <!-- Live Metrics Display -->
   <div class="metrics-container">
-    <h3 style="margin-top:0; color:#2ecc71;">📊 Live Performance Metrics</h3>
+    <h3 style="margin-top:0; color:#2ecc71;"> Live Performance Metrics</h3>
     <div class="metrics-grid">
       <div class="metric-item">
         <div class="metric-label">Average Time</div>
@@ -147,7 +170,7 @@
         <div class="metric-value" id="wrong-count">0</div>
       </div>
       <div class="metric-item">
-        <div class="metric-label">🏆 Best Time</div>
+        <div class="metric-label"> Best Time</div>
         <div class="metric-value" id="highscore">-</div>
       </div>
     </div>
@@ -162,15 +185,18 @@
     <button class="game-button" id="button1" onclick="handleButtonPress(1)">🎮 Button 1</button>
     <button class="game-button" id="button2" onclick="handleButtonPress(2)">🎮 Button 2</button>
   </div>
-
-  <!-- Status and Coach Boxes -->
+    
+  <!-- Screen Flash Effect -->
+ <div id="screen-flash"></div>
+  
+ <!-- Status and Coach Boxes -->
   <div class="info-boxes">
     <div class="status-box">
-      <h4>🎮 Game Status</h4>
+      <h4> Game Status</h4>
       <div id="status">Press Start to Play</div>
     </div>
     <div class="coach-box">
-      <h4>🤖 Mini Coach</h4>
+      <h4> Mini Coach</h4>
       <div id="coachBox">Your AI coach will guide you here!</div>
     </div>
   </div>
@@ -190,7 +216,7 @@
   </table>
 
   <!-- Analytics Chart -->
-  <h2>📈 Performance Analytics</h2>
+  <h2> Performance Analytics</h2>
   <div class="chart-container">
     <canvas id="reactionChart" width="600" height="300"></canvas>
   </div>

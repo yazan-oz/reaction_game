@@ -145,7 +145,7 @@ function handleButtonPress(button) {
     
     if (reactionTime < highScore) {
       highScore = reactionTime;
-      UI.celebrateNewRecord();
+      triggerScreenFlash();
       if (gameMode !== "time_attack") {
         statusText += ` 🎉 NEW RECORD!`;
       }
@@ -267,4 +267,16 @@ function initializeGame() {
     
     Metrics.updateLiveMetrics();
   }
+
+// Screen flash for new high scores
+function triggerScreenFlash() {
+  const flash = document.getElementById('screen-flash');
+  if (flash) {
+    flash.style.display = 'block';
+    setTimeout(() => {
+      flash.style.display = 'none';
+    }, 200); // Flash for 200ms
+  }
+}
+
 }

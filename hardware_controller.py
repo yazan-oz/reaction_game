@@ -13,7 +13,7 @@ def log_diagnostic(message, error=None):
         print(f"[{timestamp}] ERROR TYPE: {type(error).__name__}")
 
 class HardwareController:
-    BUTTON_1_PIN = 18
+    BUTTON_1_PIN = 21
     BUTTON_2_PIN = 19
     
     def __init__(self):

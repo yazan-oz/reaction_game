@@ -121,6 +121,10 @@ if HARDWARE_ENABLED and hardware:
 def index():
     return render_template("template.html", hardware_enabled=HARDWARE_ENABLED)
 
+@app.route("/mobile")
+def mobile_index():
+    return render_template("mobile.html", hardware_enabled=HARDWARE_ENABLED)
+
 @app.route("/api/buttons", methods=["GET"])
 def get_buttons():
     return jsonify(buttons)
