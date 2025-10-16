@@ -6,7 +6,6 @@ import random
 import threading
 import atexit
 from datetime import datetime
-from flask import json, request
 
 # Import hardware controller with detailed diagnostics
 HARDWARE_ENABLED = False
@@ -61,6 +60,24 @@ game_state = {
     "tension_building": False
 }
 
+# File to store leaderboard data
+LEADERBOARD_FILE = 'leaderboard_data.json'
+
+def load_leaderboard():
+    """Load leaderboard from JSON file"""
+    if os.path.exists(LEADERBOARD_FILE):
+        try:
+            with open(LEADERBOARD_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_leaderboard(data):
+    """Save leaderboard to JSON file"""
+    with open(LEADERBOARD_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
 def hardware_button_pressed(button_id):
     """Callback for hardware button press"""
     log_app(f"Hardware button {button_id} pressed")
@@ -106,25 +123,6 @@ def handle_button_press(button_id):
     
     return game_state
 
-
-# File to store leaderboard data
-LEADERBOARD_FILE = 'leaderboard_data.json'
-
-def load_leaderboard():
-    """Load leaderboard from JSON file"""
-    if os.path.exists(LEADERBOARD_FILE):
-        try:
-            with open(LEADERBOARD_FILE, 'r') as f:
-                return json.load(f)
-        except:
-            return []
-    return []
-
-def save_leaderboard(data):
-    """Save leaderboard to JSON file"""
-    with open(LEADERBOARD_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
-
 # Setup hardware callbacks
 if HARDWARE_ENABLED and hardware:
     log_app("Setting up hardware button callbacks...")
@@ -139,6 +137,8 @@ if HARDWARE_ENABLED and hardware:
     except Exception as e:
         log_app(f"Error setting up hardware callbacks: {e}")
         HARDWARE_ENABLED = False
+
+# ===== ROUTES =====
 
 @app.route("/")
 def index():
@@ -198,6 +198,7 @@ def get_status():
         status["hardware_available"] = False
     return jsonify(status)
 
+# ===== LEADERBOARD ROUTES =====
 
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
@@ -226,6 +227,7 @@ def get_leaderboard():
 def save_score():
     """Save a new score to leaderboard"""
     data = request.json
+    
     # Validate required fields
     required_fields = ['name', 'gameMode', 'score', 'avgTime', 'accuracy']
     if not all(field in data for field in required_fields):
@@ -283,6 +285,8 @@ def clear_leaderboard():
     # In production, add authentication here!
     save_leaderboard([])
     return jsonify({'success': True, 'message': 'Leaderboard cleared'})
+
+# ===== HARDWARE CONTROL ROUTES =====
 
 @app.route("/api/reset_motor", methods=["POST"])
 def reset_motor():
@@ -359,7 +363,6 @@ def hardware_diagnostics():
         diagnostics["lgpio_available"] = False
     
     # Check GPIO device files
-    import os
     gpio_devices = ['/dev/gpiochip0', '/dev/gpiomem']
     diagnostics["gpio_devices"] = {}
     for device in gpio_devices:
@@ -376,6 +379,8 @@ def hardware_diagnostics():
                 pass
     
     return jsonify(diagnostics)
+
+# ===== MAIN =====
 
 if __name__ == "__main__":
     import sys
@@ -406,11 +411,11 @@ if __name__ == "__main__":
             log_app("Reason: Hardware not enabled due to initialization failure")
     
     log_app("=" * 50)
-    log_app("Visit http://localhost:5000/api/hardware_diagnostics for detailed hardware status")
+    log_app("Visit /api/hardware_diagnostics for detailed hardware status")
     if not HARDWARE_ENABLED:
         log_app("For hardware mode, try: python3 app.py --no-debug")
     log_app("=" * 50)
     
-    if __name__ == '__main__':
-        port = int(os.environ.get('PORT', 5000))
-        app.run(host='0.0.0.0', port=port, debug=False)
+    # Run the app - bind to 0.0.0.0 and use PORT from environment (for Render)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
