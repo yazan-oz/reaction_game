@@ -88,6 +88,11 @@ function miniCoach(sessionResults) {
     if (coachBox && message) {
         coachBox.innerHTML = `${emoji} ${message}`;
     }
+    
+    // Also send to chat sidebar
+    if (message && typeof Chat !== 'undefined' && Chat.logAIFeedback) {
+        Chat.logAIFeedback(`${emoji} ${message}`);
+    }
 }
 
 // Helper function to calculate variance for consistency analysis

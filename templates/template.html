@@ -3,196 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <title>Reaction Game with Analytics</title>
-  <style>
-    body { font-family: Arial; text-align:center; background:#121212; color:white; margin:0; padding:0; }
-    h1,h2 { margin-top:20px; }
-    .controls { margin:20px 0; }
-    .game-button { padding:20px 40px; margin:20px; font-size:20px; border:none; border-radius:12px; cursor:pointer; background:#333; color:white; transition: box-shadow 0.3s, background 0.3s, transform 0.2s; }
-    .game-button.glow { background:#2ecc71; box-shadow:0 0 20px #2ecc71,0 0 40px #2ecc71; transform:scale(1.1); }
-    .status { margin-top:20px; font-size:20px; }
-    .countdown { margin:20px 0; font-size:24px; color:#f1c40f; }
-    .results { margin-top:20px; font-size:18px; }
-    table { margin:20px auto; border-collapse:collapse; width:60%; }
-    th, td { border:1px solid #444; padding:8px; font-size:16px; }
-    th { background:#333; }
-    td { background:#222; }
-    #round-counter { margin-top:10px; font-size:20px; color:#f39c12; }
-    canvas.confetti { position:fixed; top:0; left:0; pointer-events:none; width:100%; height:100%; z-index:9999; }
-    
-    /* Enhanced Metrics Styling */
-    .metrics-container { 
-      margin:20px auto; 
-      padding:20px; 
-      background:#1e1e1e; 
-      border-radius:12px; 
-      border:2px solid #2ecc71;
-      max-width:900px;
-    }
-    .metrics-grid { 
-      display:grid; 
-      grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); 
-      gap:15px; 
-      margin-top:10px;
-    }
-    .metric-item { 
-      background:#2a2a2a; 
-      padding:15px; 
-      border-radius:8px; 
-      border-left:4px solid #3498db;
-    }
-    .metric-label { 
-      font-size:14px; 
-      color:#bdc3c7; 
-      margin-bottom:5px;
-    }
-    .metric-value { 
-      font-size:24px; 
-      font-weight:bold; 
-      color:#ecf0f1;
-    }
-    .metric-value.fast { color:#2ecc71; }
-    .metric-value.slow { color:#e74c3c; }
-    .metric-value.perfect { color:#f1c40f; }
-
-    /* Status and Coach Box Styling */
-    .info-boxes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin: 20px auto;
-      max-width: 800px;
-    }
-    .status-box, .coach-box {
-      background: #1e1e1e;
-      padding: 20px;
-      border-radius: 12px;
-      border: 2px solid #3498db;
-    }
-    .coach-box {
-      border-color: #9b59b6;
-    }
-    .status-box h4, .coach-box h4 {
-      margin-top: 0;
-      color: #3498db;
-    }
-    .coach-box h4 {
-      color: #9b59b6;
-    }
-
-    /* Physical Button Indicator */
-    .hardware-status {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #1e1e1e;
-      padding: 10px;
-      border-radius: 8px;
-      border: 2px solid #2ecc71;
-      font-size: 12px;
-      z-index: 1000;
-    }
-    .hardware-status.disconnected {
-      border-color: #e74c3c;
-      box-shadow: 0 0 10px #e74c3c;
-    }
-
-    /* Button Container */
-    .button-container { margin: 30px 0; }
-    .chart-container { max-width: 800px; margin: 0 auto; }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <title>Aber Bist du Bereit?</title>
 </head>
 <body>
-  <h1>🎯 Reaction Time Trainer</h1>
+  <h1>Zeitst🎯pp</h1>
 
   <!-- Hardware Status Indicator -->
   <div class="hardware-status" id="hardware-status">
     🔌 Physical Buttons: <span id="hardware-indicator">Detecting...</span>
   </div>
 
-  <!-- Mode and Difficulty Controls -->
-  <div class="controls">
-    <label for="mode">Game Mode:</label>
-    <select id="mode">
-      <option value="time_attack">⚡ Time Attack (Score Challenge)</option>
-      <option value="unlimited">♾️ Unlimited (Endless Practice)</option>
-      <option value="endurance">💪 Endurance (5 Rounds)</option>
-    </select>
+  <div class="main-container">
+    <!-- Main Game Area -->
+    <div class="game-area">
+      <!-- Mode and Difficulty Controls -->
+      <div class="controls">
+        <label for="mode">Game Mode:</label>
+        <select id="mode">
+          <option value="time_attack">⚡ Time Attack (Score Challenge)</option>
+          <option value="unlimited">♾️ Unlimited (Endless Practice)</option>
+          <option value="endurance">💪 Endurance (5 Rounds)</option>
+        </select>
 
-    <label for="difficulty">Difficulty:</label>
-    <select id="difficulty">
-      <option value="easy">😊 Easy (60s, 2-4s delay)</option>
-      <option value="medium">😐 Medium (45s, 1-3s delay)</option>
-      <option value="hard">😤 Hard (30s, 0.5-2s delay)</option>
-    </select>
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+          <option value="easy">😊 Easy (60s, 2-4s delay)</option>
+          <option value="medium">😐 Medium (45s, 1-3s delay)</option>
+          <option value="hard">😤 Hard (30s, 0.5-2s delay)</option>
+        </select>
 
-    <button onclick="startGame()">🚀 Start Game</button>
-  </div>
+        <button onclick="startGame()">🚀 Start Game</button>
+      </div>
 
-  <!-- Live Metrics Display -->
-  <div class="metrics-container">
-    <h3 style="margin-top:0; color:#2ecc71;">📊 Live Performance Metrics</h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <div class="metric-label">Average Time</div>
-        <div class="metric-value" id="avg-time">-</div>
+      <!-- Live Metrics Display -->
+      <div class="metrics-container">
+        <h3 style="margin-top:0; color:#2ecc71;">📊 Live Performance Metrics</h3>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Average Time</div>
+            <div class="metric-value" id="avg-time">-</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label" id="correct-label">✅ Correct</div>
+            <div class="metric-value" id="correct-count">0</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label" id="wrong-label">❌ Wrong</div>
+            <div class="metric-value" id="wrong-count">0</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">🏆 Best Time</div>
+            <div class="metric-value" id="highscore">-</div>
+          </div>
+        </div>
       </div>
-      <div class="metric-item">
-        <div class="metric-label" id="correct-label">✅ Correct</div>
-        <div class="metric-value" id="correct-count">0</div>
+
+      <!-- Round Info -->
+      <div class="countdown" id="countdown">Ready to start!</div>
+      <div id="round-counter">Round 0 of 5</div>
+
+      <!-- Game Buttons -->
+      <div class="button-container">
+        <button class="game-button" id="button1" onclick="handleButtonPress(1)">🎮 Button 1</button>
+        <button class="game-button" id="button2" onclick="handleButtonPress(2)">🎮 Button 2</button>
       </div>
-      <div class="metric-item">
-        <div class="metric-label" id="wrong-label">❌ Wrong</div>
-        <div class="metric-value" id="wrong-count">0</div>
+
+      <!-- Status and Coach Boxes -->
+      <div class="info-boxes">
+        <div class="status-box">
+          <h4>🎮 Game Status</h4>
+          <div id="status">Press Start to Play</div>
+        </div>
+        <div class="coach-box">
+          <h4>🤖 Mini Coach</h4>
+          <div id="coachBox">Your AI coach will guide you here!</div>
+        </div>
       </div>
-      <div class="metric-item">
-        <div class="metric-label">🏆 Best Time</div>
-        <div class="metric-value" id="highscore">-</div>
+
+      <!-- Results Table -->
+      <div class="results" id="results"></div>
+      <table id="attempts-table">
+        <thead>
+          <tr>
+            <th>Round</th>
+            <th>Reaction Time (ms)</th>
+            <th>Status</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <!-- Leaderboard Section -->
+      <div style="margin: 40px auto; max-width: 800px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h2 style="margin: 0;">🏆 Leaderboard</h2>
+          <button onclick="Leaderboard.clearLeaderboard()" style="padding: 8px 16px; font-size: 14px; background: #e74c3c;">Clear</button>
+        </div>
+        <div id="leaderboard-container" style="background: #1e1e1e; padding: 20px; border-radius: 12px; border: 2px solid #f39c12;">
+          <p style="text-align:center; color:#888;">No scores yet. Play to set a record!</p>
+        </div>
+      </div>
+
+      <!-- Analytics Chart -->
+      <h2>📈 Performance Analytics</h2>
+      <div class="chart-container">
+        <canvas id="reactionChart" width="600" height="300"></canvas>
       </div>
     </div>
-  </div>
 
-  <!-- Round Info -->
-  <div class="countdown" id="countdown">Ready to start!</div>
-  <div id="round-counter">Round 0 of 5</div>
-
-  <!-- Game Buttons -->
-  <div class="button-container">
-    <button class="game-button" id="button1" onclick="handleButtonPress(1)">🎮 Button 1</button>
-    <button class="game-button" id="button2" onclick="handleButtonPress(2)">🎮 Button 2</button>
-  </div>
-
-  <!-- Status and Coach Boxes -->
-  <div class="info-boxes">
-    <div class="status-box">
-      <h4>🎮 Game Status</h4>
-      <div id="status">Press Start to Play</div>
+    <!-- Sidebar Chat -->
+    <div class="chat-sidebar">
+      <div class="chat-header">
+        💬 Live Game Feed
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-message system">
+          <div>Welcome to Reaction Time Trainer! 👋</div>
+          <div class="message-time">Ready to start</div>
+        </div>
+      </div>
     </div>
-    <div class="coach-box">
-      <h4>🤖 Mini Coach</h4>
-      <div id="coachBox">Your AI coach will guide you here!</div>
-    </div>
-  </div>
-
-  <!-- Results Table -->
-  <div class="results" id="results"></div>
-  <table id="attempts-table">
-    <thead>
-      <tr>
-        <th>Round</th>
-        <th>Reaction Time (ms)</th>
-        <th>Status</th>
-        <th>Points</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- Analytics Chart -->
-  <h2>📈 Performance Analytics</h2>
-  <div class="chart-container">
-    <canvas id="reactionChart" width="600" height="300"></canvas>
   </div>
 
   <canvas class="confetti" id="confetti-canvas"></canvas>
@@ -205,6 +138,8 @@
   <script src="{{ url_for('static', filename='js/ui-updates.js') }}"></script>
   <script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
   <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/leaderboard.js') }}"></script>
   <script src="{{ url_for('static', filename='js/coach.js') }}"></script>
   <script src="{{ url_for('static', filename='js/hardware.js') }}"></script>
   <script src="{{ url_for('static', filename='js/game-core.js') }}"></script>
@@ -212,20 +147,39 @@
   <!-- Optional: Bootstrap JS bundle (includes Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-
   <!-- Initialize Application -->
   <script>
     // Initialize all modules when page loads
     window.addEventListener("DOMContentLoaded", () => {
+      console.log('Page loaded, initializing...');
+      
       // Initialize game from storage
-      initializeGame();
+      if (typeof initializeGame === 'function') {
+        initializeGame();
+      }
       
       // Initialize chart
-      Charts.initChart();
-      Charts.updateChart();
+      if (typeof Charts !== 'undefined' && Charts.initChart) {
+        Charts.initChart();
+        Charts.updateChart();
+      }
       
       // Initialize hardware integration
-      Hardware.init();
+      if (typeof Hardware !== 'undefined' && Hardware.init) {
+        Hardware.init();
+      }
+      
+      // Display leaderboard
+      if (typeof Leaderboard !== 'undefined' && Leaderboard.displayLeaderboard) {
+        Leaderboard.displayLeaderboard();
+      }
+      
+      // Test chat
+      if (typeof Chat !== 'undefined') {
+        console.log('Chat module loaded successfully');
+      } else {
+        console.error('Chat module not loaded!');
+      }
     });
   </script>
 

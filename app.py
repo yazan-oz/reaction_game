@@ -1,9 +1,12 @@
 from flask import Flask, render_template, jsonify, request
+import json
 import os
 import time
 import random
 import threading
 import atexit
+from datetime import datetime
+from flask import json, request
 
 # Import hardware controller with detailed diagnostics
 HARDWARE_ENABLED = False
@@ -103,6 +106,25 @@ def handle_button_press(button_id):
     
     return game_state
 
+
+# File to store leaderboard data
+LEADERBOARD_FILE = 'leaderboard_data.json'
+
+def load_leaderboard():
+    """Load leaderboard from JSON file"""
+    if os.path.exists(LEADERBOARD_FILE):
+        try:
+            with open(LEADERBOARD_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_leaderboard(data):
+    """Save leaderboard to JSON file"""
+    with open(LEADERBOARD_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
 # Setup hardware callbacks
 if HARDWARE_ENABLED and hardware:
     log_app("Setting up hardware button callbacks...")
@@ -175,6 +197,92 @@ def get_status():
     else:
         status["hardware_available"] = False
     return jsonify(status)
+
+
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    """Get top scores for a game mode"""
+    game_mode = request.args.get('mode', 'time_attack')
+    limit = int(request.args.get('limit', 10))
+    
+    all_scores = load_leaderboard()
+    
+    # Filter by game mode
+    mode_scores = [s for s in all_scores if s.get('gameMode') == game_mode]
+    
+    # Sort based on game mode
+    if game_mode == 'time_attack':
+        mode_scores.sort(key=lambda x: x.get('score', 0), reverse=True)
+    else:
+        mode_scores.sort(key=lambda x: x.get('avgTime', float('inf')))
+    
+    return jsonify({
+        'success': True,
+        'scores': mode_scores[:limit],
+        'total': len(mode_scores)
+    })
+
+@app.route('/api/leaderboard', methods=['POST'])
+def save_score():
+    """Save a new score to leaderboard"""
+    data = request.json
+    # Validate required fields
+    required_fields = ['name', 'gameMode', 'score', 'avgTime', 'accuracy']
+    if not all(field in data for field in required_fields):
+        return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+    
+    # Sanitize player name (prevent XSS)
+    player_name = data['name'].strip()[:50]  # Max 50 characters
+    if not player_name:
+        return jsonify({'success': False, 'error': 'Invalid player name'}), 400
+    
+    # Create new entry
+    new_entry = {
+        'name': player_name,
+        'score': int(data['score']),
+        'gameMode': data['gameMode'],
+        'avgTime': float(data['avgTime']) if data['avgTime'] != '-' else 0,
+        'accuracy': float(data['accuracy']),
+        'date': datetime.utcnow().isoformat(),
+        'timestamp': datetime.utcnow().timestamp()
+    }
+    
+    # Load existing scores
+    all_scores = load_leaderboard()
+    all_scores.append(new_entry)
+    
+    # Keep only top 100 scores per mode to prevent file from getting too large
+    mode_scores = [s for s in all_scores if s.get('gameMode') == data['gameMode']]
+    other_scores = [s for s in all_scores if s.get('gameMode') != data['gameMode']]
+    
+    # Sort and limit
+    if data['gameMode'] == 'time_attack':
+        mode_scores.sort(key=lambda x: x.get('score', 0), reverse=True)
+    else:
+        mode_scores.sort(key=lambda x: x.get('avgTime', float('inf')))
+    
+    mode_scores = mode_scores[:100]
+    
+    # Combine and save
+    final_scores = other_scores + mode_scores
+    save_leaderboard(final_scores)
+    
+    # Calculate rank
+    rank = next((i + 1 for i, s in enumerate(mode_scores) if s == new_entry), len(mode_scores))
+    
+    return jsonify({
+        'success': True,
+        'rank': rank,
+        'total': len(mode_scores),
+        'entry': new_entry
+    })
+
+@app.route('/api/leaderboard/clear', methods=['POST'])
+def clear_leaderboard():
+    """Clear the entire leaderboard (admin only - add authentication in production!)"""
+    # In production, add authentication here!
+    save_leaderboard([])
+    return jsonify({'success': True, 'message': 'Leaderboard cleared'})
 
 @app.route("/api/reset_motor", methods=["POST"])
 def reset_motor():

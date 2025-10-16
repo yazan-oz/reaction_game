@@ -18,6 +18,11 @@ let maxCombo = 0;
 // ===== Session Storage =====
 let sessionResults = [];
 
+// ===== Debouncing State =====
+let isProcessingButton = false;
+let lastButtonPressTime = 0;
+const DEBOUNCE_MS = 100; // Prevent duplicate presses within 100ms
+
 // ===== Settings by Difficulty =====
 const difficultySettings = {
   easy: { minDelay: 2000, maxDelay: 4000, timeLimit: 60 },
@@ -51,6 +56,13 @@ function startGame() {
   difficulty = document.getElementById("difficulty").value;
   round = 0;
   targetButton = null;
+  isProcessingButton = false;
+  lastButtonPressTime = 0;
+  
+  // Log game start to chat
+  if (typeof Chat !== 'undefined' && Chat.logGameStart) {
+    Chat.logGameStart(gameMode, difficulty);
+  }
   
   // Initialize based on game mode
   if (gameMode === "time_attack") {
@@ -109,6 +121,7 @@ function nextRound() {
     if (gameMode === "time_attack" && gameTimeLeft <= 0) return;
     
     targetButton = Math.floor(Math.random() * 2) + 1;
+    isProcessingButton = false; // Reset processing flag for new round
     UI.showTargetButton(targetButton);
     UI.updateStatus(`🎯 Press Button ${targetButton}!`);
     
@@ -121,8 +134,31 @@ function nextRound() {
 }
 
 function handleButtonPress(button) {
-  if (!targetButton) return;
-
+  const now = Date.now();
+  
+  // ===== DEBOUNCE CHECK =====
+  if (now - lastButtonPressTime < DEBOUNCE_MS) {
+    console.log(`Button ${button} debounced (too fast: ${now - lastButtonPressTime}ms)`);
+    return;
+  }
+  lastButtonPressTime = now;
+  
+  // ===== STATE VALIDATION WITH FEEDBACK =====
+  if (!targetButton) {
+    console.log(`Button ${button} rejected: No target button set (round not active)`);
+    // Optional: Show brief visual feedback
+    UI.updateStatus("⏸️ Wait for the button to glow!");
+    return;
+  }
+  
+  if (isProcessingButton) {
+    console.log(`Button ${button} rejected: Already processing another button press`);
+    return;
+  }
+  
+  // ===== LOCK PROCESSING =====
+  isProcessingButton = true;
+  
   const reactionTime = Date.now() - startTime;
   let statusText = "";
   let points = 0;
@@ -143,6 +179,11 @@ function handleButtonPress(button) {
     
     sessionResults.push({ round, reactionTime, status: "Correct", points: points || 0 });
     
+    // Log to chat
+    if (typeof Chat !== 'undefined' && Chat.logRoundResult) {
+      Chat.logRoundResult(round, reactionTime, "Correct", points);
+    }
+    
     if (reactionTime < highScore) {
       highScore = reactionTime;
       triggerScreenFlash();
@@ -159,6 +200,11 @@ function handleButtonPress(button) {
       statusText = `❌ Wrong! Pressed ${button}, needed ${targetButton}`;
     }
     sessionResults.push({ round, reactionTime: "-", status: "Wrong", points: 0 });
+    
+    // Log to chat
+    if (typeof Chat !== 'undefined' && Chat.logRoundResult) {
+      Chat.logRoundResult(round, "-", "Wrong", 0);
+    }
   }
 
   // Update all systems
@@ -179,7 +225,10 @@ function handleButtonPress(button) {
   // Schedule next round
   const nextRoundDelay = gameMode === "time_attack" ? 500 : 
                         gameMode === "unlimited" ? 1000 : 2000;
-  setTimeout(nextRound, nextRoundDelay);
+  setTimeout(() => {
+    isProcessingButton = false; // Unlock for next round
+    nextRound();
+  }, nextRoundDelay);
 }
 
 function startTimeAttackTimer() {
@@ -206,12 +255,32 @@ function endTimeAttackGame() {
   }
   UI.clearGlow();
   targetButton = null;
+  isProcessingButton = false;
   
-  const finalMessage = `🏁 Time's Up! Final Score: ${score} points!`;
+  const finalMessage = `⏱ Time's Up! Final Score: ${score} points!`;
   UI.updateStatus(finalMessage);
   UI.updateCountdown(`Max Combo: ${maxCombo}x | Total Reactions: ${sessionResults.length}`);
   
-  // Coach final message
+  // Log to chat
+  if (typeof Chat !== 'undefined' && Chat.logGameEnd) {
+    Chat.logGameEnd(`🏁 Game Over! Final Score: ${score} pts | Max Combo: ${maxCombo}x`);
+  }
+  
+  // Calculate stats for leaderboard
+  const validTimes = sessionResults.filter(r => r.reactionTime !== "-");
+  const avgTime = validTimes.length > 0 ? 
+    Math.round(validTimes.reduce((a, b) => a + b.reactionTime, 0) / validTimes.length) : 0;
+  const accuracy = sessionResults.length > 0 ? 
+    Math.round((validTimes.length / sessionResults.length) * 100) : 0;
+  
+  // Prompt to save score after a short delay (async function)
+  setTimeout(async () => {
+    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore) {
+      await Leaderboard.promptSaveScore("time_attack", score, avgTime, maxCombo);
+    }
+  }, 500);
+  
+  // Coach message
   let coachMessage = "";
   if (score > 1000) coachMessage = "🏆 Outstanding performance! You're a time attack master!";
   else if (score > 500) coachMessage = "🔥 Great job! Your reflexes are sharp!";
@@ -220,6 +289,10 @@ function endTimeAttackGame() {
   
   const coachBox = document.getElementById("coachBox");
   if (coachBox) coachBox.textContent = coachMessage;
+  
+  if (typeof Chat !== 'undefined' && Chat.logAIFeedback) {
+    Chat.logAIFeedback(coachMessage);
+  }
 }
 
 function endGame() {
@@ -229,6 +302,19 @@ function endGame() {
   
   UI.updateStatus("🏁 Game Complete!");
   UI.updateCountdown(`Average: ${avg}ms | Accuracy: ${accuracy}%`);
+  
+  // Log to chat
+  if (typeof Chat !== 'undefined' && Chat.logGameEnd) {
+    Chat.logGameEnd(`🏁 Game Complete! Avg: ${avg}ms | Accuracy: ${accuracy}%`);
+  }
+  
+  // Prompt to save score (async function)
+  const currentMode = document.getElementById("mode") ? document.getElementById("mode").value : "endurance";
+  setTimeout(async () => {
+    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore && avg !== "-") {
+      await Leaderboard.promptSaveScore(currentMode, 0, parseFloat(avg), parseFloat(accuracy));
+    }
+  }, 500);
   
   // Final coach message
   if (times.length > 0) {
@@ -241,6 +327,11 @@ function endGame() {
     
     const coachBox = document.getElementById("coachBox");
     if (coachBox) coachBox.textContent = message;
+    
+    // Send to chat
+    if (typeof Chat !== 'undefined' && Chat.logAIFeedback) {
+      Chat.logAIFeedback(message);
+    }
   }
 }
 
@@ -267,6 +358,7 @@ function initializeGame() {
     
     Metrics.updateLiveMetrics();
   }
+}
 
 // Screen flash for new high scores
 function triggerScreenFlash() {
@@ -277,6 +369,4 @@ function triggerScreenFlash() {
       flash.style.display = 'none';
     }, 200); // Flash for 200ms
   }
-}
-
 }
