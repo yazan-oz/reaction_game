@@ -60,11 +60,148 @@ game_state = {
     "tension_building": False
 }
 
-# File to store leaderboard data
-LEADERBOARD_FILE = 'leaderboard_data.json'
+# ====DATABASE SETUP: Try PostgreSQL, fallback to JSON file====
+
+USE_DATABASE = False
+db_connection = None
+LEADERBOARD_FILE = 'leaderboard_data.json' # JSON file fallback
+
+def init_database():
+    """"Initialize PostgreSQL connection if DATABASE_URL is available"""
+    
+    global USE_DATABASE, db_connection
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        try:
+            if database_url.startswith("postgres://"):
+                database_url = database_url.replace("postgres://", "postgresql://", 1)
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+
+            log_app("Attempting to connect to PostgreSQL database...") 
+            db_connection = psycopg2.connect(database_url)
+
+            with db_connection.cursor() as cursor: #Create leaderboard table if it does not exist
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS leaderboard (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(50) NOT NULL,
+                        score INTEGER NOT NULL,
+                        game_mode VARCHAR(20) NOT NULL,
+                        avg_time FLOAT NOT NULL,
+                        accuracy FLOAT NOT NULL,
+                        date TIMESTAMP NOT NULL,
+                        timestamp FLOAT NOT NULL 
+                    );
+                """)
+
+                cursor.execute( """ CREATE INDEX IF NOT EXISTS idx_game_mode ON leaderboard(game_mode)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_score ON leaderboard(score DESC)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_avg_time ON leaderboard(avg_time)
+                """)
+                
+                db_connection.commit()
+            
+            USE_DATABASE = True
+            log_app("✅ PostgreSQL database connected successfully!")
+            log_app("Leaderboard data will persist across server restarts.")
+
+        except ImportError:
+             log_app("⚠️ psycopg2 not installed. Install with: pip install psycopg2-binary")
+             log_app("Falling back to JSON file storage (will reset on server restart)")
+             USE_DATABASE = False
+        
+        except Exception as e:
+            log_app(f"⚠️ Could not connect to database: {e}")
+            log_app("Falling back to JSON file storage (will reset on server restart)")
+            USE_DATABASE = False
+    else:
+         log_app("ℹ️ DATABASE_URL not found in environment variables")
+         log_app("Using JSON file storage (will reset on server restart)")
+         log_app("To enable persistent storage, add a PostgreSQL database in Render")
+         USE_DATABASE = False
+init_database()
 
 def load_leaderboard():
-    """Load leaderboard from JSON file"""
+    """Load leaderboard from database or JSON file"""
+    if USE_DATABASE and db_connection:
+        try:
+            with db_connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT name, score, game_mode, avg_time, accuracy, date, timestamp
+                    FROM Leaderboard
+                    ORDER BY timestamp DESC
+                    """)
+                rows = cursor.fetchall()
+
+                #COnvert to list of dicts
+                return [
+                    {
+                        'name': row[0],
+                        'score': row[1],
+                        'gameMode': row[2],
+                        'avgTime': row[3],
+                        'accuracy': row[4],
+                        'date': row[5].isoformat(),
+                        'timestamp': row[6]
+                    }
+                    for row in rows
+                ]
+        except Exception as e:
+            log_app(f"Error loading from database: {e}")
+            log_app("Falling back to JSON file storage")
+            return load_leaderboard_json()
+    else:
+        return load_leaderboard_json()
+    
+def save_leaderboard(data):
+    """Save leaderboard to database or JSON file"""
+    if USE_DATABASE and db_connection:
+        try:
+            # For database, we only need to save new entries
+            # (This function is called with full list, but we handle it differently)
+            # We'll actually modify how save_score works instead
+            pass
+        except Exception as e:
+            log_app(f"Error saving to database: {e}")
+            log_app("Falling back to JSON file")
+            save_leaderboard_json(data)
+    else:
+        save_leaderboard_json(data)
+
+           
+def save_score_to_database(entry):
+    """Save a single score entry to database"""
+    if USE_DATABASE and db_connection:
+        try:
+            with db_connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO leaderboard 
+                    (name, score, game_mode, avg_time, accuracy, date, timestamp)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    entry['name'],
+                    entry['score'],
+                    entry['gameMode'],
+                    entry['avgTime'],
+                    entry['accuracy'],
+                    datetime.fromisoformat(entry['date']),
+                    entry['timestamp']
+                ))
+                db_connection.commit()
+            return True
+        except Exception as e:
+            log_app(f"Error saving score to database: {e}")
+            return False
+    return False
+
+
+def load_leaderboard_json():
+    """Load leaderboard from JSON file (fallback)"""
     if os.path.exists(LEADERBOARD_FILE):
         try:
             with open(LEADERBOARD_FILE, 'r') as f:
@@ -73,10 +210,13 @@ def load_leaderboard():
             return []
     return []
 
-def save_leaderboard(data):
-    """Save leaderboard to JSON file"""
-    with open(LEADERBOARD_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+def save_leaderboard_json(data):
+    """Save leaderboard to JSON file (fallback)"""
+    try:
+        with open(LEADERBOARD_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        log_app(f"Error saving to JSON: {e}")
 
 def hardware_button_pressed(button_id):
     """Callback for hardware button press"""
@@ -220,9 +360,9 @@ def get_leaderboard():
     return jsonify({
         'success': True,
         'scores': mode_scores[:limit],
-        'total': len(mode_scores)
+        'total': len(mode_scores),
+        'storage_type': 'database' if USE_DATABASE else 'json'  # NEW LINE
     })
-
 @app.route('/api/leaderboard', methods=['POST'])
 def save_score():
     """Save a new score to leaderboard"""
@@ -249,41 +389,75 @@ def save_score():
         'timestamp': datetime.utcnow().timestamp()
     }
     
-    # Load existing scores
+    # Save to database or JSON
+    if USE_DATABASE:
+        success = save_score_to_database(new_entry)
+        if not success:
+            log_app("Database save failed, falling back to JSON")
+            # Fallback to JSON
+            all_scores = load_leaderboard_json()
+            all_scores.append(new_entry)
+            save_leaderboard_json(all_scores)
+    else:
+        # Save to JSON file
+        all_scores = load_leaderboard_json()
+        all_scores.append(new_entry)
+        
+        # Keep only top 100 scores per mode to prevent file from getting too large
+        mode_scores = [s for s in all_scores if s.get('gameMode') == data['gameMode']]
+        other_scores = [s for s in all_scores if s.get('gameMode') != data['gameMode']]
+        
+        # Sort and limit
+        if data['gameMode'] == 'time_attack':
+            mode_scores.sort(key=lambda x: x.get('score', 0), reverse=True)
+        else:
+            mode_scores.sort(key=lambda x: x.get('avgTime', float('inf')))
+        
+        mode_scores = mode_scores[:100]
+        
+        # Combine and save
+        final_scores = other_scores + mode_scores
+        save_leaderboard_json(final_scores)
+    
+    # Calculate rank
     all_scores = load_leaderboard()
-    all_scores.append(new_entry)
-    
-    # Keep only top 100 scores per mode to prevent file from getting too large
     mode_scores = [s for s in all_scores if s.get('gameMode') == data['gameMode']]
-    other_scores = [s for s in all_scores if s.get('gameMode') != data['gameMode']]
     
-    # Sort and limit
     if data['gameMode'] == 'time_attack':
         mode_scores.sort(key=lambda x: x.get('score', 0), reverse=True)
     else:
         mode_scores.sort(key=lambda x: x.get('avgTime', float('inf')))
     
-    mode_scores = mode_scores[:100]
-    
-    # Combine and save
-    final_scores = other_scores + mode_scores
-    save_leaderboard(final_scores)
-    
-    # Calculate rank
-    rank = next((i + 1 for i, s in enumerate(mode_scores) if s == new_entry), len(mode_scores))
+    rank = next((i + 1 for i, s in enumerate(mode_scores) if 
+                 s['name'] == player_name and 
+                 abs(s['timestamp'] - new_entry['timestamp']) < 1), len(mode_scores))
     
     return jsonify({
         'success': True,
         'rank': rank,
         'total': len(mode_scores),
-        'entry': new_entry
+        'entry': new_entry,
+        'storage_type': 'database' if USE_DATABASE else 'json'  # NEW LINE
     })
 
 @app.route('/api/leaderboard/clear', methods=['POST'])
 def clear_leaderboard():
     """Clear the entire leaderboard (admin only - add authentication in production!)"""
     # In production, add authentication here!
-    save_leaderboard([])
+    
+    if USE_DATABASE and db_connection:
+        try:
+            with db_connection.cursor() as cursor:
+                cursor.execute("DELETE FROM leaderboard")
+                db_connection.commit()
+            log_app("Database leaderboard cleared")
+        except Exception as e:
+            log_app(f"Error clearing database: {e}")
+            return jsonify({'success': False, 'error': str(e)})
+    else:
+        save_leaderboard_json([])
+        log_app("JSON leaderboard cleared")
+    
     return jsonify({'success': True, 'message': 'Leaderboard cleared'})
 
 # ===== HARDWARE CONTROL ROUTES =====
@@ -345,6 +519,8 @@ def hardware_diagnostics():
     diagnostics = {
         "hardware_enabled": HARDWARE_ENABLED,
         "hardware_object_exists": hardware is not None,
+        "database_enabled": USE_DATABASE,  # NEW LINE
+        "database_type": "PostgreSQL" if USE_DATABASE else "JSON file",  # NEW LINE
         "system_info": {
             "platform": __import__('sys').platform,
             "python_version": __import__('sys').version
@@ -394,7 +570,16 @@ if __name__ == "__main__":
     log_app("=" * 50)
     log_app("Starting Reaction Time Game Server...")
     log_app(f"Hardware enabled: {HARDWARE_ENABLED}")
+    log_app(f"Database enabled: {USE_DATABASE}")  # NEW LINE
+    log_app(f"Storage type: {'PostgreSQL' if USE_DATABASE else 'JSON file (ephemeral)'}")  # NEW LINE
     log_app(f"Debug mode: {debug_mode}")
+    
+    if not USE_DATABASE:  # NEW SECTION
+        log_app("⚠️ WARNING: Using JSON file storage - data will be lost on server restart!")
+        log_app("To enable persistent storage:")
+        log_app("  1. Add a PostgreSQL database in Render Dashboard")
+        log_app("  2. Install psycopg2-binary: pip install psycopg2-binary")
+        log_app("  3. Database will be auto-detected from DATABASE_URL environment variable")
     
     if HARDWARE_ENABLED and hardware:
         log_app("Hardware mode: Physical buttons and stepper motor enabled")
@@ -411,7 +596,7 @@ if __name__ == "__main__":
             log_app("Reason: Hardware not enabled due to initialization failure")
     
     log_app("=" * 50)
-    log_app("Visit /api/hardware_diagnostics for detailed hardware status")
+    log_app("Visit /api/hardware_diagnostics for detailed hardware & database status")  # UPDATED LINE
     if not HARDWARE_ENABLED:
         log_app("For hardware mode, try: python3 app.py --no-debug")
     log_app("=" * 50)
