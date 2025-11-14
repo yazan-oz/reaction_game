@@ -342,6 +342,34 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// ===== Mobile Touch Support (add after keyboard input section) =====
+function setupMobileTouch() {
+  const button1 = document.getElementById('button1');
+  const button2 = document.getElementById('button2');
+
+  if (button1 && button2) {
+    [button1, button2].forEach((btn, index) =>{ 
+    const buttonNumber = index + 1;
+
+    // Touch events for mobile (fires immediately)
+    btn.addEventListener('touchstart', (e) =>{
+      e.preventDefault(); //Prevents the 300ms delay on mobile browsers
+      handleButtonPress(buttonNumber);
+    }, { passive: false });
+  
+    // Optional: Mouse events for desktop
+    btn.addEventListener('click', (e) => {
+      if (!e.detail || e.detail === 0) return;
+      handleButtonPress(buttonNumber);
+      });
+    });
+
+    console.log("Mobile touch support initialized.");
+  }
+}
+
+
+
 // ===== Initialize from Storage =====
 function initializeGame() {
   const stored = Storage.initializeFromStorage();
@@ -358,6 +386,7 @@ function initializeGame() {
     
     Metrics.updateLiveMetrics();
   }
+  setupMobileTouch();
 }
 
 // Screen flash for new high scores
