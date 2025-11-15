@@ -27,7 +27,8 @@ const DEBOUNCE_MS = 100; // Prevent duplicate presses within 100ms
 const difficultySettings = {
   easy: { minDelay: 2000, maxDelay: 4000, timeLimit: 60 },
   medium: { minDelay: 1000, maxDelay: 3000, timeLimit: 45 },
-  hard: { minDelay: 500, maxDelay: 2000, timeLimit: 30 }
+  hard: { minDelay: 500, maxDelay: 2000, timeLimit: 30 },
+  hell: {minDelay: 250, maxDelay: 1000, timeLimit: 20}
 };
 
 // ===== Game State Access for Other Modules =====
@@ -51,7 +52,13 @@ function startGame() {
     clearInterval(gameTimer);
     gameTimer = null;
   }
-  
+  // ===== HELL MODE VISUAL EFFECTS =====
+  if (difficulty === 'hell') {
+    enableHellMode();
+  } else {
+    disableHellMode();
+  }
+
   gameMode = document.getElementById("mode").value;
   difficulty = document.getElementById("difficulty").value;
   round = 0;
@@ -398,4 +405,51 @@ function triggerScreenFlash() {
       flash.style.display = 'none';
     }, 200); // Flash for 200ms
   }
+}
+
+// ===== HELL MODE VISUAL EFFECTS =====
+function enableHellMode() {
+  // Add hell mode class to body
+  document.body.classList.add('hell-mode');
+  
+  // Create fire particles
+  const fireContainer = document.getElementById('fire-container');
+  if (fireContainer) {
+    fireContainer.innerHTML = ''; // Clear existing particles
+    
+    // Create 20 fire particles at random positions
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'fire-particle';
+      
+      // Random horizontal position
+      particle.style.left = `${Math.random() * 100}%`;
+      
+      // Random animation delay for staggered effect
+      particle.style.animationDelay = `${Math.random() * 3}s`;
+      
+      // Random drift amount (CSS variable)
+      particle.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
+      
+      fireContainer.appendChild(particle);
+    }
+  }
+  
+  // Show warning message
+  UI.updateStatus("🔥 HELL MODE ACTIVATED 🔥");
+  
+  console.log('🔥 Hell mode visual effects enabled');
+}
+
+function disableHellMode() {
+  // Remove hell mode class
+  document.body.classList.remove('hell-mode');
+  
+  // Clear fire particles
+  const fireContainer = document.getElementById('fire-container');
+  if (fireContainer) {
+    fireContainer.innerHTML = '';
+  }
+  
+  console.log('Hell mode visual effects disabled');
 }

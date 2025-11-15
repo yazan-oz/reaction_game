@@ -405,3 +405,128 @@ button:hover {
         width: 90%;
     }
 }
+
+/* ===== HELL MODE===== */
+
+/* Red background for Hell mode */
+body.hell-mode {
+  background: linear-gradient(180deg, #1a0000 0%, #330000 50%, #1a0000 100%);
+  transition: background 0.5s ease;
+}
+
+/*Red particles*/
+
+.fire-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+  display: none;
+}
+body.hell-mode .fire-container {
+  display: block;
+}
+
+/* Individual fire particles */
+.fire-particle {
+  position: absolute;
+  bottom: -50px;
+  width: 20px;
+  height: 60px;
+  background: linear-gradient(to top, 
+    rgba(255, 69, 0, 0.8) 0%,
+    rgba(255, 140, 0, 0.6) 30%,
+    rgba(255, 215, 0, 0.4) 60%,
+    rgba(255, 255, 0, 0.1) 100%
+  );
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  filter: blur(5px);
+  animation: rise 3s infinite ease-in;
+  opacity: 0;
+}
+
+/* Fire rising animation */
+@keyframes rise {
+  0% {
+    bottom: -50px;
+    opacity: 0;
+    transform: translateX(0) scale(1);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateX(var(--drift)) scale(0.5);
+  }
+}
+
+/* Flicker animation for fire */
+@keyframes flicker {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.fire-particle {
+  animation: rise 3s infinite ease-in, flicker 0.3s infinite;
+}
+
+/* Screen border glow */
+body.hell-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 3px solid rgba(255, 69, 0, 0.6);
+  box-shadow: 
+    inset 0 0 50px rgba(255, 69, 0, 0.3),
+    0 0 50px rgba(255, 69, 0, 0.3);
+  pointer-events: none;
+  z-index: 9998;
+  animation: glow-pulse 2s infinite;
+}
+
+/* Pulsing glow animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      inset 0 0 50px rgba(255, 69, 0, 0.3),
+      0 0 50px rgba(255, 69, 0, 0.3);
+  }
+  50% {
+    box-shadow: 
+      inset 0 0 80px rgba(255, 69, 0, 0.5),
+      0 0 80px rgba(255, 69, 0, 0.5);
+  }
+}
+
+/* Hell mode title color */
+body.hell-mode h1 {
+  color: #ff4500;
+  text-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
+  animation: title-flicker 0.5s infinite;
+}
+
+@keyframes title-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+/* Button glow in Hell mode */
+body.hell-mode .game-button.glow {
+  background: #ff4500;
+  box-shadow: 
+    0 0 20px #ff4500,
+    0 0 40px #ff4500,
+    0 0 60px #ff1100;
+}
