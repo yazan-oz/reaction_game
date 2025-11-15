@@ -1,0 +1,465 @@
+/* ===== HELL MODE===== */
+
+/* ===== HELL MODE - COMPLETE ===== */
+
+/* Hell mode title - blends with fire background */
+body.hell-mode h1 {
+  color: #ff4500;
+  background: transparent !important;
+  text-shadow: 
+    0 0 20px rgba(255, 140, 0, 1),
+    0 0 40px rgba(255, 69, 0, 0.8),
+    0 0 60px rgba(255, 69, 0, 0.6),
+    0 0 80px rgba(255, 69, 0, 0.4);
+  animation: title-flicker 0.5s infinite, title-glow 2s infinite;
+  position: relative;
+  z-index: 10;
+  margin: 20px 0;
+  padding: 0;
+}
+@keyframes title-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+/* Red background for Hell mode */
+body.hell-mode {
+  background: linear-gradient(180deg, #1a0000 0%, #330000 50%, #1a0000 100%) !important;
+  transition: background 0.5s ease;
+}
+
+/* Fire background layer - SUPER BRIGHT CENTER - EXTENDS HIGHER */
+body.hell-mode::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    /* SUPER bright central fire - reaches higher */
+    radial-gradient(ellipse 70% 90% at 50% 65%, 
+      rgba(255, 215, 0, 0.8) 0%,
+      rgba(255, 140, 0, 0.7) 15%,
+      rgba(255, 69, 0, 0.6) 30%,
+      rgba(255, 140, 0, 0.4) 50%,
+      rgba(255, 69, 0, 0.2) 70%,
+      transparent 90%
+    ),
+    /* Left fire pillar - taller */
+    radial-gradient(ellipse 35% 75% at 20% 75%, 
+      rgba(255, 140, 0, 0.6) 0%, 
+      rgba(255, 69, 0, 0.4) 35%,
+      transparent 75%
+    ),
+    /* Right fire pillar - taller */
+    radial-gradient(ellipse 35% 75% at 80% 75%, 
+      rgba(255, 140, 0, 0.6) 0%, 
+      rgba(255, 69, 0, 0.4) 35%,
+      transparent 75%
+    );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  animation: fire-fade-in 1s forwards, fire-flicker 2s infinite, heat-ripple 4s infinite;
+}
+
+@keyframes fire-fade-in {
+  to { opacity: 1; }
+}
+
+@keyframes fire-flicker {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  25% { 
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+  50% { 
+    opacity: 0.9;
+    transform: translateY(-5px);
+  }
+  75% { 
+    opacity: 1;
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes heat-ripple {
+  0%, 100% {
+    filter: blur(0px);
+  }
+  50% {
+    filter: blur(1px);
+  }
+}
+
+/* Floating embers/particles */
+/* Floating embers/particles - EVERYWHERE! */
+body.hell-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    /* Top area */
+    radial-gradient(2px 2px at 15% 10%, rgba(255, 140, 0, 0.9), transparent),
+    radial-gradient(3px 3px at 30% 8%, rgba(255, 215, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 50% 12%, rgba(255, 69, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 70% 15%, rgba(255, 140, 0, 0.8), transparent),
+    radial-gradient(3px 3px at 85% 10%, rgba(255, 215, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 95% 8%, rgba(255, 69, 0, 0.8), transparent),
+    
+    /* Upper-middle area */
+    radial-gradient(2px 2px at 10% 25%, rgba(255, 140, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 25% 22%, rgba(255, 69, 0, 0.9), transparent),
+    radial-gradient(3px 3px at 40% 28%, rgba(255, 215, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 60% 20%, rgba(255, 140, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 75% 26%, rgba(255, 69, 0, 0.8), transparent),
+    radial-gradient(3px 3px at 88% 23%, rgba(255, 215, 0, 0.9), transparent),
+    
+    /* Middle area */
+    radial-gradient(2px 2px at 12% 45%, rgba(255, 69, 0, 0.8), transparent),
+    radial-gradient(3px 3px at 28% 40%, rgba(255, 140, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 45% 48%, rgba(255, 215, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 55% 42%, rgba(255, 69, 0, 0.9), transparent),
+    radial-gradient(3px 3px at 72% 46%, rgba(255, 140, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 90% 44%, rgba(255, 215, 0, 0.9), transparent),
+    
+    /* Lower-middle area */
+    radial-gradient(2px 2px at 8% 65%, rgba(255, 140, 0, 0.9), transparent),
+    radial-gradient(3px 3px at 22% 62%, rgba(255, 215, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 38% 68%, rgba(255, 69, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 52% 60%, rgba(255, 140, 0, 0.8), transparent),
+    radial-gradient(3px 3px at 68% 66%, rgba(255, 215, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 82% 63%, rgba(255, 69, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 95% 67%, rgba(255, 140, 0, 0.9), transparent),
+    
+    /* Bottom area */
+    radial-gradient(3px 3px at 18% 85%, rgba(255, 215, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 35% 80%, rgba(255, 140, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 48% 88%, rgba(255, 69, 0, 0.9), transparent),
+    radial-gradient(3px 3px at 65% 82%, rgba(255, 215, 0, 0.8), transparent),
+    radial-gradient(2px 2px at 78% 86%, rgba(255, 140, 0, 0.9), transparent),
+    radial-gradient(2px 2px at 92% 84%, rgba(255, 69, 0, 0.8), transparent);
+    
+    
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  animation: ember-float 9s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.9;
+}
+
+@keyframes ember-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(-30px) translateX(10px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-60px) translateX(-10px);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-30px) translateX(10px);
+    opacity: 0.8;
+  }
+}
+
+/* Transparent containers so fire shows through */
+body.hell-mode .metrics-container {
+  background: rgba(30, 30, 30, 0.6) !important;
+  border-color: #ff4500 !important;
+  backdrop-filter: blur(3px);
+  box-shadow: 
+    0 0 20px rgba(255, 69, 0, 0.4),
+    inset 0 0 20px rgba(255, 69, 0, 0.2);
+  animation: metrics-pulse 2s infinite;
+}
+
+body.hell-mode .metric-item {
+  background: rgba(42, 42, 42, 0.7) !important;
+}
+
+body.hell-mode .status-box,
+body.hell-mode .coach-box {
+  background: rgba(30, 30, 30, 0.6) !important;
+  backdrop-filter: blur(3px);
+  border-color: rgba(255, 69, 0, 0.6);
+  box-shadow: 
+    0 0 15px rgba(255, 69, 0, 0.3),
+    inset 0 0 15px rgba(255, 69, 0, 0.1);
+  animation: box-shimmer 2.5s infinite;
+}
+
+@keyframes metrics-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(255, 69, 0, 0.4),
+      inset 0 0 20px rgba(255, 69, 0, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px rgba(255, 69, 0, 0.6),
+      inset 0 0 30px rgba(255, 69, 0, 0.3);
+  }
+}
+
+@keyframes box-shimmer {
+  0%, 100% {
+    box-shadow: 
+      0 0 15px rgba(255, 69, 0, 0.3),
+      inset 0 0 15px rgba(255, 69, 0, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 25px rgba(255, 140, 0, 0.5),
+      inset 0 0 25px rgba(255, 69, 0, 0.2);
+  }
+}
+
+/* Button glow in Hell mode */
+body.hell-mode .game-button.glow {
+  background: #ff4500 !important;
+  box-shadow: 
+    0 0 20px #ff4500,
+    0 0 40px #ff4500,
+    0 0 60px #ff1100 !important;
+}
+
+/* Heat haze distortion effect on buttons */
+body.hell-mode .game-button {
+  animation: heat-haze 0.3s infinite;
+}
+
+@keyframes heat-haze {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  33% {
+    transform: translateY(-1px) scaleY(1.005);
+  }
+  66% {
+    transform: translateY(1px) scaleY(0.995);
+  }
+}
+
+/* Ensure game content is above effects */
+.main-container,
+.container,
+h1,
+.controls,
+.game-button,
+.metrics-container,
+.info-boxes,
+table,
+.chat-sidebar {
+  position: relative;
+  z-index: 10;
+}
+
+/* ===== ANIMATED FIRE WAVES ===== */
+
+/* Fire wave animation container */
+body.hell-mode .metrics-container::before,
+body.hell-mode .info-boxes::before,
+body.hell-mode #round-counter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 69, 0, 0.4) 20%,
+    rgba(255, 140, 0, 0.6) 40%,
+    rgba(255, 215, 0, 0.4) 60%,
+    rgba(255, 140, 0, 0.6) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: fire-wave 3s linear infinite;
+  pointer-events: none;
+  border-radius: 12px;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+@keyframes fire-wave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Shimmer effect on countdown/stats text */
+body.hell-mode .countdown,
+body.hell-mode #round-counter {
+  color: #ff8c00;
+  text-shadow: 
+    0 0 10px rgba(255, 140, 0, 0.8),
+    0 0 20px rgba(255, 69, 0, 0.6);
+  animation: text-shimmer 1.5s infinite;
+}
+
+@keyframes text-shimmer {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px rgba(255, 140, 0, 0.8),
+      0 0 20px rgba(255, 69, 0, 0.6);
+  }
+  50% {
+    text-shadow: 
+      0 0 20px rgba(255, 215, 0, 1),
+      0 0 40px rgba(255, 140, 0, 0.8),
+      0 0 60px rgba(255, 69, 0, 0.6);
+  }
+}
+
+/* Metric values glow */
+body.hell-mode .metric-value {
+  text-shadow: 
+    0 0 10px rgba(255, 140, 0, 0.6),
+    0 0 20px rgba(255, 69, 0, 0.4);
+  animation: value-pulse 1s infinite;
+}
+
+@keyframes value-pulse {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px rgba(255, 140, 0, 0.6),
+      0 0 20px rgba(255, 69, 0, 0.4);
+  }
+  50% {
+    text-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 30px rgba(255, 140, 0, 0.6),
+      0 0 40px rgba(255, 69, 0, 0.4);
+  }
+}
+/* ===== TEXT COLOR FIXES FOR HELL MODE ===== */
+
+/* Max Combo and Total Reactions text - make visible */
+body.hell-mode .countdown {
+  color: #ffffff !important;
+  text-shadow: 
+    0 0 10px rgb(248 0 0 / 80%),
+    0 0 20px rgb(255 0 0 / 60%);
+  animation: text-shimmer 1.5s infinite;
+}
+
+/* Round counter already styled, but ensure consistency */
+body.hell-mode #round-counter {
+  color: #ffffff !important;
+  text-shadow: 
+    0 0 10px rgba(255, 140, 0, 0.8),
+    0 0 20px rgba(255, 69, 0, 0.6);
+  animation: text-shimmer 1.5s infinite;
+}
+
+/* Table headers - make bright and readable */
+body.hell-mode table th {
+  color: #ff8c00 !important;
+  background: rgba(255, 69, 0, 0.3) !important;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.8);
+}
+
+/* Table cells - make readable */
+body.hell-mode table td {
+  color: #ffb366 !important;
+  background: rgba(42, 42, 42, 0.7) !important;
+}
+
+/* All general text in Hell mode */
+body.hell-mode {
+  color: #fdfdfd !important;
+}
+
+/* Metric labels */
+body.hell-mode .metric-label {
+  color: #ff8c00 !important;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
+}
+
+/* Button text */
+body.hell-mode .game-button {
+  color: #ffb366 !important;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.5);
+}
+
+/* Status and coach box text */
+body.hell-mode .status-box,
+body.hell-mode .coach-box {
+  color: #ffb366 !important;
+}
+
+body.hell-mode .status-box h4,
+body.hell-mode .coach-box h4 {
+  color: #ff8c00 !important;
+  text-shadow: 0 0 8px rgba(255, 140, 0, 0.8);
+}
+
+/* Chat sidebar adjustments */
+body.hell-mode .chat-sidebar {
+  background: rgba(30, 30, 30, 0.6) !important;
+  backdrop-filter: blur(3px);
+}
+
+body.hell-mode .chat-header {
+  background: rgba(255, 69, 0, 0.3) !important;
+  color: #ff8c00 !important;
+}
+
+body.hell-mode .chat-message {
+  color: #ffb366 !important;
+}
+
+/* Leaderboard section */
+body.hell-mode #leaderboard-container {
+  background: rgba(30, 30, 30, 0.6) !important;
+  backdrop-filter: blur(3px);
+  border-color: rgba(255, 69, 0, 0.6) !important;
+}
+
+body.hell-mode #leaderboard-container table th {
+  background: rgba(255, 69, 0, 0.4) !important;
+  color: #ff8c00 !important;
+}
+
+body.hell-mode #leaderboard-container table td {
+  color: #ffb366 !important;
+}
+
+/* Dropdown/select elements */
+body.hell-mode select,
+body.hell-mode option {
+  background: rgba(42, 42, 42, 0.9) !important;
+  color: #ffb366 !important;
+  border-color: rgba(255, 69, 0, 0.6) !important;
+}
+
+/* Labels */
+body.hell-mode label {
+  color: #ff8c00 !important;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
+}
+
+/* Hardware status indicator */
+body.hell-mode .hardware-status {
+  background: rgba(30, 30, 30, 0.8) !important;
+  border-color: rgba(255, 69, 0, 0.6) !important;
+  color: #ffb366 !important;
+}

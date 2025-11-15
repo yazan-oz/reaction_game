@@ -199,13 +199,63 @@ function handleButtonPress(button) {
       }
     }
   } else {
-    // Wrong button
+    // ===== WRONG BUTTON =====
+    
+    // HELL MODE: INSTANT DEATH
+    if (difficulty === "hell") {
+      statusText = `💀 GAME OVER! Wrong button in Hell Mode! You survived ${round} round(s).`;
+      
+      // Push the wrong result
+      sessionResults.push({ round, reactionTime: "-", status: "Wrong (Hell Mode Death)", points: 0 });
+      
+      // Update UI
+      UI.updateStatus(statusText);
+      UI.updateAttemptsTable();
+      Metrics.updateLiveMetrics();
+      Storage.saveRecentAttempts();
+      Charts.updateChart();
+      
+      // Clear the glow
+      UI.clearGlow();
+      targetButton = null;
+      isProcessingButton = false;
+      
+      // Stop the timer if in time attack
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      
+      // Show Hell Mode death message
+      const deathMessage = round === 1 ? 
+        "💀 Eliminated on first round! Hell shows no mercy!" :
+        `💀 You survived ${round} rounds in Hell Mode before your demise.`;
+      
+      UI.updateCountdown(deathMessage);
+      
+      // Update coach with death message
+      const coachBox = document.getElementById("coachBox");
+      if (coachBox) {
+        coachBox.textContent = "😈 Hell Mode claimed another victim. Try again if you dare!";
+      }
+      
+      // Log to chat
+      if (typeof Chat !== 'undefined' && Chat.logRoundResult) {
+        Chat.logRoundResult(round, "-", "Wrong (Hell Mode Death)", 0);
+      }
+      
+      // Don't continue to next round - game is over
+      return;
+    }
+    
+    // NORMAL MODES: Wrong button handling
     if (gameMode === "time_attack") {
       combo = 0;
       statusText = `❌ Wrong! Combo broken! (needed ${targetButton})`;
     } else {
       statusText = `❌ Wrong! Pressed ${button}, needed ${targetButton}`;
     }
+    
     sessionResults.push({ round, reactionTime: "-", status: "Wrong", points: 0 });
     
     // Log to chat
