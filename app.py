@@ -383,6 +383,8 @@ def save_score():
         'name': player_name,
         'score': int(data['score']),
         'gameMode': data['gameMode'],
+        'difficulty': data.get('difficulty', 'unknown'),  # NEW - save difficulty
+        'maxCombo': int(data.get('maxCombo', 0)),
         'avgTime': float(data['avgTime']) if data['avgTime'] != '-' else 0,
         'accuracy': float(data['accuracy']),
         'date': datetime.utcnow().isoformat(),
@@ -602,5 +604,5 @@ if __name__ == "__main__":
     log_app("=" * 50)
     
     # Run the app - bind to 0.0.0.0 and use PORT from environment (for Render)
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 4000))
     app.run(host='0.0.0.0', port=port, debug=debug_mode)

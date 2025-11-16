@@ -14,7 +14,7 @@ const Leaderboard = {
   },
   
   // Save a new score to SERVER
-  async saveScore(playerName, score, gameMode, avgTime, accuracy) {
+  async saveScore(playerName, score, gameMode, avgTime, accuracy, difficulty, maxCombo) {
     try {
       console.log('Saving score:', { playerName, score, gameMode, avgTime, accuracy });
       
@@ -27,6 +27,8 @@ const Leaderboard = {
           name: playerName,
           score: score,
           gameMode: gameMode,
+          difficulty: difficulty,
+          maxCombo: maxCombo,
           avgTime: avgTime,
           accuracy: accuracy
         })
@@ -58,11 +60,20 @@ const Leaderboard = {
   },
   
   // Prompt player to save their score
-  async promptSaveScore(gameMode, finalScore, avgTime, accuracy) {
+  // Prompt player to save their score
+  async promptSaveScore(gameMode, finalScore, avgTime, accuracy, difficulty, maxCombo = 0) {
     const playerName = prompt("🏆 Great score! Enter your name for the leaderboard:");
     
     if (playerName && playerName.trim()) {
-      const saved = await this.saveScore(playerName.trim(), finalScore, gameMode, avgTime, accuracy);
+      const saved = await this.saveScore(
+        playerName.trim(), 
+        finalScore, 
+        gameMode, 
+        avgTime, 
+        accuracy, 
+        difficulty,
+        maxCombo
+      );
       
       if (saved && saved.rank) {
         await this.displayLeaderboard();
@@ -82,6 +93,56 @@ const Leaderboard = {
     return null;
   },
   
+  // Save a new score to SERVER
+  async saveScore(playerName, score, gameMode, avgTime, accuracy, difficulty, maxCombo = 0) {
+    try {
+      console.log('Saving score:', { 
+        playerName, 
+        score, 
+        gameMode, 
+        avgTime, 
+        accuracy, 
+        difficulty,  // ← Check this value!
+        maxCombo 
+      });
+      
+      const response = await fetch('/api/leaderboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: playerName,
+          score: score,
+          gameMode: gameMode,
+          difficulty: difficulty,  // ← Must be sent!
+          maxCombo: maxCombo,
+          avgTime: avgTime,
+          accuracy: accuracy
+        })
+      });
+      
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (data.success) {
+        return {
+          ...data.entry,
+          rank: data.rank,
+          total: data.total
+        };
+      }
+      
+      console.error('Save failed:', data);
+      return null;
+    } catch (error) {
+      console.error('Failed to save score:', error);
+      return null;
+    }
+  },
+  
+  // Display leaderboard in the UI
   // Display leaderboard in the UI
   async displayLeaderboard() {
     const container = document.getElementById('leaderboard-container');
@@ -121,13 +182,18 @@ const Leaderboard = {
       else if (rank === 2) rankEmoji = '🥈';
       else if (rank === 3) rankEmoji = '🥉';
       
-      html += '<tr>';
+      // Check if this is a Hell mode entry
+      const isHellMode = entry.difficulty === 'hell';
+      const hellClass = isHellMode ? ' class="hell-survivor"' : '';
+      const hellBadge = isHellMode ? ' 🔥' : '';
+      
+      html += `<tr${hellClass}>`;
       html += `<td style="text-align:center;">${rankEmoji} ${rank}</td>`;
-      html += `<td>${entry.name}</td>`;
+      html += `<td>${entry.name}${hellBadge}</td>`;
       
       if (currentMode === "time_attack") {
         html += `<td>${entry.score} pts</td>`;
-        html += `<td>${entry.accuracy || '-'}</td>`;
+        html += `<td>${entry.maxCombo || 0}x</td>`; // This should be maxCombo, not accuracy
       } else {
         html += `<td>${entry.avgTime}ms</td>`;
         html += `<td>${entry.accuracy}%</td>`;

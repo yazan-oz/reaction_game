@@ -25,9 +25,9 @@
       <div class="controls">
         <label for="mode">Game Mode:</label>
         <select id="mode">
-          <option value="time_attack">⚡ Time Attack (Score Challenge)</option>
-          <option value="unlimited">♾️ Unlimited (Endless Practice)</option>
-          <option value="endurance">💪 Endurance (5 Rounds)</option>
+          <option value="time_attack">⚡ Time Attack </option>
+          <option value="unlimited">♾️ Unlimited </option>
+          <option value="endurance">💪 Endurance </option>
         </select>
 
         <label for="difficulty">Difficulty:</label>
@@ -35,7 +35,7 @@
           <option value="easy">😊 Easy (60s, 2-4s delay)</option>
           <option value="medium">😐 Medium (45s, 1-3s delay)</option>
           <option value="hard">😤 Hard (30s, 0.5-2s delay)</option>
-          <option value ="hell">😈 Hell (20s, 0.25-1s delay)</option>
+          <option value ="hell">😈 Hell (20s, 0.20-0.8s delay)</option>
         </select>
 
         <button onclick="startGame()">🚀 Start Game</button>
@@ -186,6 +186,20 @@
       }
     });
   </script>
+
+  <!-- Hell Mode Audio -->
+  <audio id="hell-mode-audio" loop>
+    <source src="{{ url_for('static', filename='audio/hell-mode.mp3') }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Optional: Add volume control -->
+  <div id="hell-audio-controls" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <label style="color: #ff8c00; font-size: 14px;">
+      🔊 Hell Music: 
+      <input type="range" id="hell-volume" min="0" max="100" value="50" style="vertical-align: middle;">
+    </label>
+  </div>
 
 </body>
 </html>

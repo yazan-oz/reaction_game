@@ -7,5 +7,47 @@
     "name": "Dev1ce_",
     "score": 20606,
     "timestamp": 1760639905.44297
+  },
+  {
+    "name": "Lucas",
+    "score": 17006,
+    "gameMode": "time_attack",
+    "difficulty": "unknown",
+    "avgTime": 336.0,
+    "accuracy": 100.0,
+    "date": "2025-11-16T15:33:13.119049",
+    "timestamp": 1763303593.119058
+  },
+  {
+    "name": "Saad",
+    "score": 16047,
+    "gameMode": "time_attack",
+    "difficulty": "unknown",
+    "avgTime": 367.0,
+    "accuracy": 100.0,
+    "date": "2025-11-16T15:58:15.551859",
+    "timestamp": 1763305095.55187
+  },
+  {
+    "name": "Mo",
+    "score": 15242,
+    "gameMode": "time_attack",
+    "difficulty": "unknown",
+    "maxCombo": 0,
+    "avgTime": 399.0,
+    "accuracy": 100.0,
+    "date": "2025-11-16T16:06:33.707568",
+    "timestamp": 1763305593.707579
+  },
+  {
+    "name": "X",
+    "score": 13541,
+    "gameMode": "time_attack",
+    "difficulty": "hell",
+    "maxCombo": 0,
+    "avgTime": 404.0,
+    "accuracy": 100.0,
+    "date": "2025-11-16T16:18:15.345991",
+    "timestamp": 1763306295.346001
   }
 ]

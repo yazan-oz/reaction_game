@@ -463,3 +463,98 @@ body.hell-mode .hardware-status {
   border-color: rgba(255, 69, 0, 0.6) !important;
   color: #ffb366 !important;
 }
+/* ===== LEADERBOARD HELL MODE SURVIVORS (ALWAYS VISIBLE) ===== */
+
+/* Hell mode survivor row - fiery glow */
+.hell-survivor {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 69, 0, 0.15) 0%,
+    rgba(255, 140, 0, 0.25) 50%,
+    rgba(255, 69, 0, 0.15) 100%
+  ) !important;
+  background-size: 200% 100%;
+  animation: hell-survivor-glow 3s ease-in-out infinite;
+  border-left: 3px solid #ff4500 !important;
+  box-shadow: 
+    0 0 10px rgba(255, 69, 0, 0.3),
+    inset 0 0 10px rgba(255, 140, 0, 0.2);
+}
+
+/* Hell survivor text glow */
+.hell-survivor td {
+  color: #ffb366 !important;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
+  font-weight: bold;
+}
+
+/* Animated fiery glow effect */
+@keyframes hell-survivor-glow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 
+      0 0 10px rgba(255, 69, 0, 0.3),
+      inset 0 0 10px rgba(255, 140, 0, 0.2);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 
+      0 0 20px rgba(255, 140, 0, 0.5),
+      inset 0 0 20px rgba(255, 69, 0, 0.3);
+  }
+}
+
+/* Hell survivor name has extra glow */
+.hell-survivor td:nth-child(2) {
+  text-shadow: 
+    0 0 8px rgba(255, 140, 0, 0.8),
+    0 0 15px rgba(255, 69, 0, 0.6);
+}
+
+/* Fire badge pulse animation */
+.hell-survivor td:nth-child(2)::after {
+  animation: fire-pulse 1.5s infinite;
+}
+
+@keyframes fire-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.6));
+  }
+  50% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 140, 0, 1));
+  }
+}
+/* ===== HELL MODE AUDIO CONTROLS ===== */
+
+#hell-audio-controls {
+  background: rgba(30, 30, 30, 0.9);
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 69, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+  backdrop-filter: blur(5px);
+}
+
+#hell-audio-controls label {
+  color: #ff8c00 !important;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
+}
+
+#hell-volume {
+  width: 100px;
+  cursor: pointer;
+  accent-color: #ff4500;
+}
+
+#hell-volume::-webkit-slider-thumb {
+  background: #ff4500;
+  box-shadow: 0 0 5px rgba(255, 69, 0, 0.8);
+}
+
+#hell-volume::-moz-range-thumb {
+  background: #ff4500;
+  box-shadow: 0 0 5px rgba(255, 69, 0, 0.8);
+}

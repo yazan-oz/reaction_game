@@ -28,7 +28,7 @@ const difficultySettings = {
   easy: { minDelay: 2000, maxDelay: 4000, timeLimit: 60 },
   medium: { minDelay: 1000, maxDelay: 3000, timeLimit: 45 },
   hard: { minDelay: 500, maxDelay: 2000, timeLimit: 30 },
-  hell: {minDelay: 250, maxDelay: 1000, timeLimit: 20}
+  hell: {minDelay: 200, maxDelay: 800, timeLimit: 20}
 };
 
 // ===== Game State Access for Other Modules =====
@@ -47,29 +47,32 @@ const GameState = {
 // ===== Core Game Logic Functions =====
 
 function startGame() {
+  console.log('🚀 START GAME CALLED!');
+  
   // Clear any existing timer first
   if (gameTimer) {
     clearInterval(gameTimer);
     gameTimer = null;
   }
-  // ===== HELL MODE VISUAL EFFECTS =====
-  if (difficulty === 'hell') {
-    enableHellMode();
-  } else {
-    disableHellMode();
-  }
-
+  
+  // SET VARIABLES FIRST
   gameMode = document.getElementById("mode").value;
   difficulty = document.getElementById("difficulty").value;
+
+  // ===== HELL MODE VISUAL EFFECTS =====
+  if (difficulty === 'hell') {  
+    enableHellMode();2
+    console.log('Hell mode enabled');
+  } else {
+    console.log('Hell mode disabled');
+    disableHellMode();
+  }
+  // ===== END HELL MODE =====
+  
   round = 0;
   targetButton = null;
   isProcessingButton = false;
   lastButtonPressTime = 0;
-  
-  // Log game start to chat
-  if (typeof Chat !== 'undefined' && Chat.logGameStart) {
-    Chat.logGameStart(gameMode, difficulty);
-  }
   
   // Initialize based on game mode
   if (gameMode === "time_attack") {
@@ -89,6 +92,11 @@ function startGame() {
   UI.resetGameInterface();
   UI.updateRoundCounter();
   Metrics.updateLiveMetrics();
+  
+  // Log game start to chat
+  if (typeof Chat !== 'undefined' && Chat.logGameStart) {
+    Chat.logGameStart(gameMode, difficulty);
+  }
   
   setTimeout(nextRound, 1000);
 }
@@ -330,13 +338,6 @@ function endTimeAttackGame() {
   const accuracy = sessionResults.length > 0 ? 
     Math.round((validTimes.length / sessionResults.length) * 100) : 0;
   
-  // Prompt to save score after a short delay (async function)
-  setTimeout(async () => {
-    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore) {
-      await Leaderboard.promptSaveScore("time_attack", score, avgTime, maxCombo);
-    }
-  }, 500);
-  
   // Coach message
   let coachMessage = "";
   if (score > 1000) coachMessage = "🏆 Outstanding performance! You're a time attack master!";
@@ -350,10 +351,19 @@ function endTimeAttackGame() {
   if (typeof Chat !== 'undefined' && Chat.logAIFeedback) {
     Chat.logAIFeedback(coachMessage);
   }
+  
+  // Prompt to save score after a short delay (async function)
+  // CORRECTED PARAMETERS: gameMode, finalScore, avgTime, accuracy, difficulty
+  setTimeout(async () => {
+    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore) {
+      await Leaderboard.promptSaveScore(gameMode, score, avgTime, accuracy, difficulty);
+    }
+  }, 500);
 }
 
 function endGame() {
   const times = sessionResults.filter(r => r.reactionTime !== "-").map(r => r.reactionTime);
+  console.log('Calling promptSaveScore with:', { gameMode, avg, accuracy, difficulty }); // DEBUG
   const avg = times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(0) : "-";
   const accuracy = ((times.length / sessionResults.length) * 100).toFixed(1);
   
@@ -364,14 +374,6 @@ function endGame() {
   if (typeof Chat !== 'undefined' && Chat.logGameEnd) {
     Chat.logGameEnd(`🏁 Game Complete! Avg: ${avg}ms | Accuracy: ${accuracy}%`);
   }
-  
-  // Prompt to save score (async function)
-  const currentMode = document.getElementById("mode") ? document.getElementById("mode").value : "endurance";
-  setTimeout(async () => {
-    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore && avg !== "-") {
-      await Leaderboard.promptSaveScore(currentMode, 0, parseFloat(avg), parseFloat(accuracy));
-    }
-  }, 500);
   
   // Final coach message
   if (times.length > 0) {
@@ -390,6 +392,14 @@ function endGame() {
       Chat.logAIFeedback(message);
     }
   }
+  
+  // Prompt to save score (async function)
+  // CORRECTED PARAMETERS: gameMode, finalScore, avgTime, accuracy, difficulty
+  setTimeout(async () => {
+    if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore && avg !== "-") {
+      await Leaderboard.promptSaveScore(gameMode, 0, parseFloat(avg), parseFloat(accuracy), difficulty);
+    }
+  }, 500);
 }
 
 // ===== Keyboard Input =====
@@ -462,31 +472,33 @@ function enableHellMode() {
   // Add hell mode class to body
   document.body.classList.add('hell-mode');
   
-  // Create fire particles
-  const fireContainer = document.getElementById('fire-container');
-  if (fireContainer) {
-    fireContainer.innerHTML = ''; // Clear existing particles
+  // Start Hell mode music
+  const hellAudio = document.getElementById('hell-mode-audio');
+  const volumeControl = document.getElementById('hell-audio-controls');
+  
+  if (hellAudio) {
+    hellAudio.volume = 0.5; // 50% volume by default
     
-    // Create 20 fire particles at random positions
-    for (let i = 0; i < 20; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'fire-particle';
-      
-      // Random horizontal position
-      particle.style.left = `${Math.random() * 100}%`;
-      
-      // Random animation delay for staggered effect
-      particle.style.animationDelay = `${Math.random() * 3}s`;
-      
-      // Random drift amount (CSS variable)
-      particle.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
-      
-      fireContainer.appendChild(particle);
+    // Try to play (may be blocked by browser autoplay policy)
+    const playPromise = hellAudio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('🎵 Hell mode music started!');
+          // Show volume control
+          if (volumeControl) volumeControl.style.display = 'block';
+        })
+        .catch(error => {
+          console.log('⚠️ Autoplay blocked. User interaction required.');
+          console.log('Music will start after first button press.');
+        });
     }
   }
   
   // Show warning message
   UI.updateStatus("🔥 HELL MODE ACTIVATED 🔥");
+  UI.updateCountdown("⚠️ WARNING: One mistake = GAME OVER!");
   
   console.log('🔥 Hell mode visual effects enabled');
 }
@@ -495,11 +507,38 @@ function disableHellMode() {
   // Remove hell mode class
   document.body.classList.remove('hell-mode');
   
-  // Clear fire particles
-  const fireContainer = document.getElementById('fire-container');
-  if (fireContainer) {
-    fireContainer.innerHTML = '';
+  // Stop Hell mode music
+  const hellAudio = document.getElementById('hell-mode-audio');
+  const volumeControl = document.getElementById('hell-audio-controls');
+  
+  if (hellAudio && !hellAudio.paused) {
+    hellAudio.pause();
+    hellAudio.currentTime = 0; // Reset to beginning
+    console.log('🎵 Hell mode music stopped');
+    
+    // Hide volume control
+    if (volumeControl) volumeControl.style.display = 'none';
   }
   
   console.log('Hell mode visual effects disabled');
 }
+
+function disableHellMode() {
+  // Remove hell mode class
+  document.body.classList.remove('hell-mode');
+  
+  console.log('Hell mode visual effects disabled');
+}
+
+// ===== HELL MODE AUDIO CONTROL =====
+document.addEventListener('DOMContentLoaded', () => {
+  const volumeSlider = document.getElementById('hell-volume');
+  const hellAudio = document.getElementById('hell-mode-audio');
+  
+  if (volumeSlider && hellAudio) {
+    volumeSlider.addEventListener('input', (e) => {
+      hellAudio.volume = e.target.value / 100;
+      console.log(`🔊 Hell music volume: ${e.target.value}%`);
+    });
+  }
+});
