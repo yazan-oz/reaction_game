@@ -604,5 +604,5 @@ if __name__ == "__main__":
     log_app("=" * 50)
     
     # Run the app - bind to 0.0.0.0 and use PORT from environment (for Render)
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 4000))
     app.run(host='0.0.0.0', port=port, debug=debug_mode)

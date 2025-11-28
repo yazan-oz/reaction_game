@@ -179,6 +179,54 @@ function handleButtonPress(button) {
   let points = 0;
   
   if (button === targetButton) {
+
+    // ===== CHECK FOR CHEATERS LIKE SÖREN AND OSCAR =====
+    if (reactionTime < 100) {
+      console.log(`🚫 CHEATING DETECTED: ${reactionTime}ms reaction time. `);
+      showCheatPopup(reactionTime);
+      statusText = `🚫 CHEATER! NO NO CHEATING ${reactionTime}ms is impossible!`;
+      sessionResults.push({ round, reactionTime: "-", status: "Invalid (Too Fast)", points: 0 });
+
+    // UPDATE CHAT LOG 
+    if (typeof Chat !== 'undefined' && Chat.logRoundResult) {
+      Chat.logRoundResult(round, "-", "Invalid (Too Fast)", 0);
+    }
+      // Update UI
+      UI.updateStatus(statusText);
+      UI.updateAttemptsTable();
+      Metrics.updateLiveMetrics();
+      Storage.saveRecentAttempts();
+      Charts.updateChart();
+      if (typeof miniCoach === 'function') {
+        miniCoach(sessionResults);
+      }
+
+      UI.clearGlow();
+      targetButton = null;
+      
+      //Continue to next round after short delay
+      setTimeout(() => {
+        isProcessingButton = false; // Unlock for next round
+        nextRound();
+      }, nextRoundDelay);
+      return; // Stop Processing this press
+    }
+
+    // ===== END CHEATING CHECK =====
+    
+    // Normal reaction (100ms or above) - calculate points
+    if (gameMode === "time_attack") {
+      points = Math.max(10, Math.floor(1000 - reactionTime));
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      points = Math.floor(points * (1 + (combo - 1) * 0.1));
+      score += points;
+      
+      statusText = `✅ +${points} pts! ${reactionTime}ms (${combo}x combo)`;
+    } else {
+      statusText = `✅ Correct! ${reactionTime} ms`;
+    }
+
     // Calculate points for time attack
     if (gameMode === "time_attack") {
       points = Math.max(10, Math.floor(1000 - reactionTime));
@@ -529,6 +577,32 @@ function disableHellMode() {
   
   console.log('Hell mode visual effects disabled');
 }
+
+function showCheatPopup(reactionTime) {
+  const popup = document.getElementById('cheating-popup');
+  const timeDisplay = document.getElementById('cheating-time-display');
+  
+  if (popup && timeDisplay) {
+    timeDisplay.textContent = `${reactionTime}ms`;
+    popup.style.display = 'flex';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+      closeCheatPopup();
+    }, 3000);
+  }
+}
+
+function closeCheatPopup() {
+  const popup = document.getElementById('cheating-popup');
+  if (popup) {
+    popup.style.display = 'none';
+  }
+}
+
+// Make closeCheatPopup globally accessible for onclick
+window.closeCheatPopup = closeCheatPopup;
+
 
 // ===== HELL MODE AUDIO CONTROL =====
 document.addEventListener('DOMContentLoaded', () => {

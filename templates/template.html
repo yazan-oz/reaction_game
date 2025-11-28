@@ -201,5 +201,19 @@
     </label>
   </div>
 
+
+ <!-- Cheating Warning Popup -->
+  <div id="cheating-popup" style="display: none;">
+    <div class="cheating-overlay"></div>
+    <div class="cheating-modal">
+      <div class="cheating-icon">🚫</div>
+      <h1 class="cheating-title">CHEATING DETECTED!</h1>
+      <p class="cheating-message">Reaction time under 100ms is impossible!</p>
+      <div class="cheating-time" id="cheating-time-display">67ms</div>
+      <p class="cheating-warning">This attempt will not count.</p>
+      <button class="cheating-close" onclick="closeCheatPopup()">I Understand</button>
+    </div>
+  </div>
+
 </body>
 </html>
