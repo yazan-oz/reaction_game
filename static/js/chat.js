@@ -88,6 +88,3 @@ const Chat = {
     `;
   }
 };
-
-// Make Chat globally accessible
-window.Chat = Chat;
