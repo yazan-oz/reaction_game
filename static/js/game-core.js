@@ -404,7 +404,7 @@ function endTimeAttackGame() {
   // CORRECTED PARAMETERS: gameMode, finalScore, avgTime, accuracy, difficulty
   setTimeout(async () => {
     if (typeof Leaderboard !== 'undefined' && Leaderboard.promptSaveScore) {
-      await Leaderboard.promptSaveScore(gameMode, score, avgTime, accuracy, difficulty);
+      await Leaderboard.promptSaveScore(gameMode, score, avgTime, accuracy, difficulty, maxCombo);
     }
   }, 500);
 }
