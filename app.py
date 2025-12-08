@@ -368,6 +368,11 @@ def save_score():
     """Save a new score to leaderboard"""
     data = request.json
     
+  # DEBUG: Log what we received
+    print('📥 BACKEND RECEIVED:', data)
+    print('📥 Difficulty field:', data.get('difficulty'))
+    print('📥 Difficulty type:', type(data.get('difficulty')))
+
     # Validate required fields
     required_fields = ['name', 'gameMode', 'score', 'avgTime', 'accuracy']
     if not all(field in data for field in required_fields):

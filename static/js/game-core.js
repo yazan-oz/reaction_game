@@ -362,6 +362,11 @@ function startTimeAttackTimer() {
 }
 
 function endTimeAttackGame() {
+ // DEBUG: Check if difficulty variable exists
+  console.log('🔥 END GAME - difficulty:', difficulty);
+  console.log('🔥 END GAME - gameMode:', gameMode);
+  console.log('🔥 END GAME - typeof difficulty:', typeof difficulty);
+
   if (gameTimer) {
     clearInterval(gameTimer);
     gameTimer = null;
