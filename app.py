@@ -81,21 +81,42 @@ def init_database():
             log_app("Attempting to connect to PostgreSQL database...") 
             db_connection = psycopg2.connect(database_url)
 
-            with db_connection.cursor() as cursor: #Create leaderboard table if it does not exist
+            with db_connection.cursor() as cursor:
+                # Create leaderboard table if it does not exist
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS leaderboard (
                         id SERIAL PRIMARY KEY,
                         name VARCHAR(50) NOT NULL,
                         score INTEGER NOT NULL,
                         game_mode VARCHAR(20) NOT NULL,
+                        difficulty VARCHAR(20) DEFAULT 'unknown',
+                        max_combo INTEGER DEFAULT 0,
                         avg_time FLOAT NOT NULL,
                         accuracy FLOAT NOT NULL,
                         date TIMESTAMP NOT NULL,
                         timestamp FLOAT NOT NULL 
                     );
                 """)
+                
+                # Add columns if they don't exist (for existing databases)
+                cursor.execute("""
+                    DO $$ 
+                    BEGIN
+                        BEGIN
+                            ALTER TABLE leaderboard ADD COLUMN difficulty VARCHAR(20) DEFAULT 'unknown';
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE leaderboard ADD COLUMN max_combo INTEGER DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                    END $$;
+                """)
 
-                cursor.execute( """ CREATE INDEX IF NOT EXISTS idx_game_mode ON leaderboard(game_mode)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_game_mode ON leaderboard(game_mode)
                 """)
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_score ON leaderboard(score DESC)
@@ -132,22 +153,24 @@ def load_leaderboard():
         try:
             with db_connection.cursor() as cursor:
                 cursor.execute("""
-                    SELECT name, score, game_mode, avg_time, accuracy, date, timestamp
-                    FROM Leaderboard
+                    SELECT name, score, game_mode, difficulty, max_combo, avg_time, accuracy, date, timestamp
+                    FROM leaderboard
                     ORDER BY timestamp DESC
-                    """)
+                """)
                 rows = cursor.fetchall()
 
-                #COnvert to list of dicts
+                # Convert to list of dicts
                 return [
                     {
                         'name': row[0],
                         'score': row[1],
                         'gameMode': row[2],
-                        'avgTime': row[3],
-                        'accuracy': row[4],
-                        'date': row[5].isoformat(),
-                        'timestamp': row[6]
+                        'difficulty': row[3],
+                        'maxCombo': row[4],
+                        'avgTime': row[5],
+                        'accuracy': row[6],
+                        'date': row[7].isoformat(),
+                        'timestamp': row[8]
                     }
                     for row in rows
                 ]
@@ -181,12 +204,14 @@ def save_score_to_database(entry):
             with db_connection.cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO leaderboard 
-                    (name, score, game_mode, avg_time, accuracy, date, timestamp)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (name, score, game_mode, difficulty, max_combo, avg_time, accuracy, date, timestamp)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     entry['name'],
                     entry['score'],
                     entry['gameMode'],
+                    entry.get('difficulty', 'unknown'),
+                    entry.get('maxCombo', 0),
                     entry['avgTime'],
                     entry['accuracy'],
                     datetime.fromisoformat(entry['date']),
