@@ -13,46 +13,6 @@ const Leaderboard = {
     }
   },
   
-  // Save a new score to SERVER
-  async saveScore(playerName, score, gameMode, avgTime, accuracy, difficulty, maxCombo) {
-    try {
-      console.log('Saving score:', { playerName, score, gameMode, avgTime, accuracy });
-      
-      const response = await fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: playerName,
-          score: score,
-          gameMode: gameMode,
-          difficulty: difficulty,
-          maxCombo: maxCombo,
-          avgTime: avgTime,
-          accuracy: accuracy
-        })
-      });
-      
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (data.success) {
-        return {
-          ...data.entry,
-          rank: data.rank,
-          total: data.total
-        };
-      }
-      
-      console.error('Save failed:', data);
-      return null;
-    } catch (error) {
-      console.error('Failed to save score:', error);
-      return null;
-    }
-  },
   
   // Get top scores for a specific game mode
   async getTopScores(gameMode, limit = 10) {
