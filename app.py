@@ -41,7 +41,7 @@ except Exception as e:
 if not HARDWARE_ENABLED:
     log_app("Running in software mode - web interface only")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Game state
 buttons = [
@@ -604,5 +604,5 @@ if __name__ == "__main__":
     log_app("=" * 50)
     
     # Run the app - bind to 0.0.0.0 and use PORT from environment (for Render)
-    port = int(os.environ.get('PORT', 4000)) # Changing it to another port will hinder LOCALHOST on KIOSK!!!
+    port = int(os.environ.get('PORT', 5000)) # Changing it to another port will hinder LOCALHOST on KIOSK!!!
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
