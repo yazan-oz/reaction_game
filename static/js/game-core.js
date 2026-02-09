@@ -73,17 +73,19 @@ function startGame() {
   targetButton = null;
   isProcessingButton = false;
   lastButtonPressTime = 0;
-  
+
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+
   // Initialize based on game mode
   if (gameMode === "time_attack") {
     gameTimeLeft = difficultySettings[difficulty].timeLimit;
-    score = 0;
-    combo = 0;
-    maxCombo = 0;
     sessionResults = [];
     startTimeAttackTimer();
   } else if (gameMode === "endurance") {
     sessionResults = [];
+
   } else {
     sessionResults = sessionResults.slice(-20);
   }
