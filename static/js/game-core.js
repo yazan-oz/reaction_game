@@ -218,24 +218,21 @@ function handleButtonPress(button) {
     
     // Normal reaction (100ms or above) - calculate points
     if (gameMode === "time_attack") {
-      points = Math.max(10, Math.floor(1000 - reactionTime));
-      combo++;
-      if (combo > maxCombo) maxCombo = combo;
-      points = Math.floor(points * (1 + (combo - 1) * 0.1));
-      score += points;
-      
-      statusText = `✅ +${points} pts! ${reactionTime}ms (${combo}x combo)`;
-    } else {
-      statusText = `✅ Correct! ${reactionTime} ms`;
-    }
-
-    // Calculate points for time attack
-    if (gameMode === "time_attack") {
-      points = Math.max(10, Math.floor(1000 - reactionTime));
-      combo++;
-      if (combo > maxCombo) maxCombo = combo;
-      points = Math.floor(points * (1 + (combo - 1) * 0.1));
-      score += points;
+  points = Math.max(10, Math.floor(1000 - reactionTime));
+  combo++;
+  if (combo > maxCombo) maxCombo = combo;
+  
+  // Difficulty-based combo multiplier
+  const comboMultipliers = {
+    easy: 0.03,   // 1.03x per combo level
+    medium: 0.05, // 1.05x per combo level
+    hard: 0.07,   // 1.07x per combo level
+    hell: 0.12    // 1.12x per combo level (highest reward for surviving)
+  };
+  
+  const multiplier = comboMultipliers[difficulty] || 0.05;
+  points = Math.floor(points * (1 + (combo - 1) * multiplier));
+  score += points;
       
       statusText = `✅ +${points} pts! ${reactionTime}ms (${combo}x combo)`;
     } else {
