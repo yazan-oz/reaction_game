@@ -292,7 +292,79 @@ label {
     background: #9b59b6;
     border-radius: 4px;
 }
+/* ============================= */
+/* ===== MOBILE OPTIMIZATION ==== */
+/* ============================= */
 
+@media (max-width: 768px) {
+
+    h1 {
+        font-size: 2em;
+        margin-top: 10px;
+    }
+
+    h2 {
+        font-size: 1.3em;
+    }
+
+    .main-container {
+        padding: 0 10px;
+    }
+
+    .game-button {
+        width: 90%;
+        max-width: 300px;
+        padding: 15px 20px;
+        font-size: 18px;
+        margin: 10px auto;
+        display: block;
+    }
+
+    .button-container {
+        margin: 15px 0;
+    }
+
+    .status {
+        font-size: 16px;
+    }
+
+    .countdown {
+        font-size: 20px;
+    }
+
+    .metrics-container {
+        padding: 15px;
+        margin: 15px auto;
+    }
+
+    .metric-value {
+        font-size: 18px;
+    }
+
+    .info-boxes {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    table {
+        width: 95%;
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    .chat-sidebar {
+        height: 300px;
+    }
+
+    button {
+        width: 90%;
+        font-size: 16px;
+    }
+}
 /* ===== HARDWARE STATUS ===== */
 .hardware-status {
     position: fixed;

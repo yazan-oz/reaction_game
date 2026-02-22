@@ -132,7 +132,7 @@ def load_leaderboard():
                            max_combo, avg_time, accuracy,
                            date, timestamp
                     FROM leaderboard
-                    ORDER BY timestamp DESC
+                    ORDER BY score DESC
                 """)
 
                 rows = cursor.fetchall()
