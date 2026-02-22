@@ -16,27 +16,23 @@ def log_app(message):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] APP: {message}")
 
-try:
-    log_app("Attempting to import hardware_controller...")
-    from hardware_controller import hardware
-    
-    if hardware and hardware.is_available():
-        HARDWARE_ENABLED = True
-        log_app("Hardware controller loaded and available!")
-    else:
-        HARDWARE_ENABLED = False
-        if hardware is None:
-            log_app("Hardware controller not available - hardware object is None")
-        else:
-            log_app("Hardware controller loaded but not available - check GPIO initialization")
+# Only try to import hardware on Raspberry Pi (not on Render/cloud)
+if os.path.exists('/dev/gpiochip0'):  # This only exists on Pi
+    try:
+        log_app("GPIO detected - attempting to import hardware_controller...")
+        from hardware_controller import hardware
         
-except ImportError as e:
-    HARDWARE_ENABLED = False
-    log_app(f"Hardware controller import failed: {e}")
-    log_app("Make sure hardware_controller.py exists in the same directory")
-except Exception as e:
-    HARDWARE_ENABLED = False
-    log_app(f"Unexpected error loading hardware controller: {e}")
+        if hardware and hardware.is_available():
+            HARDWARE_ENABLED = True
+            log_app("Hardware controller loaded and available!")
+        else:
+            HARDWARE_ENABLED = False
+            log_app("Hardware controller loaded but not available")
+    except Exception as e:
+        HARDWARE_ENABLED = False
+        log_app(f"Hardware controller failed: {e}")
+else:
+    log_app("No GPIO detected - running in cloud/web-only mode")
 
 if not HARDWARE_ENABLED:
     log_app("Running in software mode - web interface only")
@@ -263,7 +259,6 @@ def handle_button_press(button_id):
     if not game_state["waiting_for_press"]:
         log_app("Button press rejected - not waiting")
         return {"error": "Not waiting for button press"}
-    
     reaction_time = int((time.time() - game_state["start_time"]) * 1000)
     
     if button_id == game_state["current_button"]:
