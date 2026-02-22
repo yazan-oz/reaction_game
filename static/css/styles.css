@@ -314,20 +314,17 @@ label {
         padding: 0 10px;
     }
 
-    @media (max-width: 768px) {
-
+    /* Chat full width and integrated */
     .chat-sidebar {
         width: 100%;
         position: relative;
         order: -1;
         margin-bottom: 20px;
 
-        /* Remove sidebar feeling */
         border-radius: 0;
         border-left: none;
         border-right: none;
 
-        /* Let it size naturally */
         height: auto;
         max-height: 50vh;
     }
@@ -337,10 +334,7 @@ label {
         overflow-y: auto;
     }
 
-
-    }
-
-    /* Controls stacked (Game Mode + Difficulty) */
+    /* Controls stacked */
     .controls {
         display: flex;
         flex-direction: column;
@@ -369,14 +363,14 @@ label {
         margin: 0;
     }
 
-    /* General buttons full width */
+    /* General buttons */
     button {
         width: 90%;
         max-width: 300px;
         font-size: 16px;
     }
 
-    /* Status & countdown */
+    /* Status */
     .status {
         font-size: 16px;
     }
