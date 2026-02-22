@@ -123,6 +123,7 @@ const Leaderboard = {
     
     if (currentMode === "time_attack") {
       html += '<th>Score</th>';
+      html += '<th>Avg Time</th>';
       html += '<th>Combo</th>';
     } else {
       html += '<th>Avg Time</th>';
@@ -153,7 +154,8 @@ const Leaderboard = {
       
       if (currentMode === "time_attack") {
         html += `<td>${entry.score} pts</td>`;
-        html += `<td>${entry.maxCombo || 0}x</td>`; // This should be maxCombo, not accuracy
+        html += `<td>${entry.avgTime}ms</td>`;
+        html += `<td>${entry.maxCombo || 0}x</td>`; //
       } else {
         html += `<td>${entry.avgTime}ms</td>`;
         html += `<td>${entry.accuracy}%</td>`;

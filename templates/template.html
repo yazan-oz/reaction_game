@@ -134,6 +134,15 @@
 
   <canvas class="confetti" id="confetti-canvas"></canvas>
 
+<script>
+  // Redirect mobile users to optimized interface
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    if (!window.location.href.includes('/mobile')) {
+      window.location.href = '/mobile';
+    }
+  }
+</script>
+
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -175,8 +175,11 @@ function handleButtonPress(button) {
   
   // ===== LOCK PROCESSING =====
   isProcessingButton = true;
-  
-  const reactionTime = Date.now() - startTime;
+  let reactionTime = Date.now() - startTime;
+  // Hell mode compensation for Animation Delay
+  if (difficulty === "hell") {
+    reactionTime = Math.max(0, reactionTime - 125); // Subtract 150ms for animation delay in hell mode
+  }
   let statusText = "";
   let points = 0;
   
@@ -227,7 +230,7 @@ function handleButtonPress(button) {
     easy: 0.03,   // 1.03x per combo level
     medium: 0.05, // 1.05x per combo level
     hard: 0.07,   // 1.07x per combo level
-    hell: 0.12    // 1.12x per combo level (highest reward for surviving)
+    hell: 0.25    // 1.12x per combo level (highest reward for surviving)
   };
   
   const multiplier = comboMultipliers[difficulty] || 0.05;
@@ -579,8 +582,22 @@ function disableHellMode() {
   // Remove hell mode class
   document.body.classList.remove('hell-mode');
   
+  // Stop Hell mode music
+  const hellAudio = document.getElementById('hell-mode-audio');
+  const volumeControl = document.getElementById('hell-audio-controls');
+  
+  if (hellAudio && !hellAudio.paused) {
+    hellAudio.pause();
+    hellAudio.currentTime = 0; // Reset to beginning
+    console.log('🎵 Hell mode music stopped');
+    
+    // Hide volume control
+    if (volumeControl) volumeControl.style.display = 'none';
+  }
+  
   console.log('Hell mode visual effects disabled');
 }
+
 
 function showCheatPopup(reactionTime) {
   const popup = document.getElementById('cheating-popup');

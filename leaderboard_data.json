@@ -9,5 +9,38 @@
     "accuracy": 100.0,
     "date": "2025-11-28T11:48:32.203050",
     "timestamp": 1764326912.203063
+  },
+  {
+    "name": "Lea",
+    "score": 28831,
+    "gameMode": "time_attack",
+    "difficulty": "hell",
+    "maxCombo": 16,
+    "avgTime": 281.0,
+    "accuracy": 100.0,
+    "date": "2026-02-22T15:05:22.471532",
+    "timestamp": 1771769122.471543
+  },
+  {
+    "name": "Youssef",
+    "score": 23350,
+    "gameMode": "time_attack",
+    "difficulty": "hell",
+    "maxCombo": 13,
+    "avgTime": 275.0,
+    "accuracy": 100.0,
+    "date": "2026-02-22T15:14:13.062419",
+    "timestamp": 1771769653.06243
+  },
+  {
+    "name": "Dev1ce_",
+    "score": 17866,
+    "gameMode": "time_attack",
+    "difficulty": "hard",
+    "maxCombo": 16,
+    "avgTime": 266.0,
+    "accuracy": 100.0,
+    "date": "2026-02-22T14:55:50.983958",
+    "timestamp": 1771768550.983969
   }
 ]
