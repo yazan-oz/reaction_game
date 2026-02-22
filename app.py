@@ -75,7 +75,10 @@ def init_database():
             from psycopg2.extras import RealDictCursor
 
             log_app("Attempting to connect to PostgreSQL database...") 
-            db_connection = psycopg2.connect(database_url)
+            db_connection = psycopg2.connect(
+                database_url,
+                connect_timeout=10  # 10 second timeout
+            )
 
             with db_connection.cursor() as cursor:
                 # Create leaderboard table if it does not exist
@@ -141,7 +144,13 @@ def init_database():
          log_app("Using JSON file storage (will reset on server restart)")
          log_app("To enable persistent storage, add a PostgreSQL database in Render")
          USE_DATABASE = False
-init_database()
+
+try:
+    init_database()
+except Exception as e:
+    log_app(f"⚠️ Database initialization failed: {e}")
+    log_app("Continuing with JSON file storage...")
+    USE_DATABASE = False
 
 def load_leaderboard():
     """Load leaderboard from database or JSON file"""
