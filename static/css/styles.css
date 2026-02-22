@@ -298,56 +298,69 @@ label {
 
 @media (max-width: 768px) {
 
-    /* Headings */
+    /* ===== GLOBAL LAYOUT RESET ===== */
+
+    .main-container {
+        display: block !important;
+        padding: 0 12px;
+    }
+
+    /* ===== CHAT FULL WIDTH (NO SIDEBAR BEHAVIOR) ===== */
+
+    .chat-sidebar {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        position: relative !important;
+        top: auto !important;
+        flex-shrink: 1 !important;
+
+        margin: 0 0 20px 0;
+        border-radius: 12px;
+    }
+
+    .chat-messages {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    /* ===== HEADINGS ===== */
+
     h1 {
         font-size: 2em;
         margin-top: 10px;
+        text-align: center;
     }
 
     h2 {
         font-size: 1.3em;
+        text-align: center;
     }
 
-    /* Layout becomes vertical */
-    .main-container {
-        flex-direction: column;
-        padding: 0 10px;
-    }
+    /* ===== CONTROLS STACKED ===== */
 
-    /* Chat full width and integrated */
-    .chat-sidebar {
-        width: 100%;
-        position: relative;
-        order: -1;
-        margin-bottom: 20px;
-
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
-
-        height: auto;
-        max-height: 50vh;
-    }
-
-    .chat-messages {
-        max-height: 40vh;
-        overflow-y: auto;
-    }
-
-    /* Controls stacked */
     .controls {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 10px;
+        margin-bottom: 20px;
     }
 
     select {
         width: 90%;
-        max-width: 300px;
+        max-width: 320px;
     }
 
-    /* Buttons side by side */
+    /* ===== START BUTTON FULL WIDTH ===== */
+
+    .controls button {
+        width: 90%;
+        max-width: 320px;
+    }
+
+    /* ===== GAME BUTTONS SIDE BY SIDE ===== */
+
     .button-container {
         display: flex;
         justify-content: center;
@@ -357,44 +370,48 @@ label {
 
     .game-button {
         flex: 1;
-        max-width: 160px;
+        max-width: 170px;
         padding: 15px;
         font-size: 16px;
         margin: 0;
     }
 
-    /* General buttons */
-    button {
-        width: 90%;
-        max-width: 300px;
-        font-size: 16px;
-    }
+    /* ===== STATUS TEXT ===== */
 
-    /* Status */
     .status {
         font-size: 16px;
+        text-align: center;
     }
 
     .countdown {
         font-size: 20px;
+        text-align: center;
     }
 
-    /* Metrics */
+    /* ===== METRICS ===== */
+
     .metrics-container {
         padding: 15px;
         margin: 15px auto;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
     .metric-value {
         font-size: 18px;
     }
 
+    /* ===== INFO BOXES ===== */
+
     .info-boxes {
         grid-template-columns: 1fr;
         gap: 10px;
     }
 
-    /* Table adjustments */
+    /* ===== TABLES ===== */
+
     table {
         width: 95%;
         font-size: 14px;
