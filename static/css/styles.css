@@ -298,25 +298,20 @@ label {
 
 @media (max-width: 768px) {
 
-    /* ===== GLOBAL LAYOUT RESET ===== */
-
+    /* Keep flex but stack vertically */
     .main-container {
-        display: block !important;
+        flex-direction: column !important;
         padding: 0 12px;
     }
 
-    /* ===== CHAT FULL WIDTH (NO SIDEBAR BEHAVIOR) ===== */
-
+    /* Move chat to top */
     .chat-sidebar {
+        order: -1;
         width: 100% !important;
         height: auto !important;
-        max-height: none !important;
         position: relative !important;
         top: auto !important;
-        flex-shrink: 1 !important;
-
-        margin: 0 0 20px 0;
-        border-radius: 12px;
+        margin-bottom: 20px;
     }
 
     .chat-messages {
@@ -324,21 +319,7 @@ label {
         overflow-y: auto;
     }
 
-    /* ===== HEADINGS ===== */
-
-    h1 {
-        font-size: 2em;
-        margin-top: 10px;
-        text-align: center;
-    }
-
-    h2 {
-        font-size: 1.3em;
-        text-align: center;
-    }
-
-    /* ===== CONTROLS STACKED ===== */
-
+    /* Controls stacked */
     .controls {
         display: flex;
         flex-direction: column;
@@ -352,15 +333,12 @@ label {
         max-width: 320px;
     }
 
-    /* ===== START BUTTON FULL WIDTH ===== */
-
     .controls button {
         width: 90%;
         max-width: 320px;
     }
 
-    /* ===== GAME BUTTONS SIDE BY SIDE ===== */
-
+    /* Buttons side by side */
     .button-container {
         display: flex;
         justify-content: center;
@@ -376,42 +354,12 @@ label {
         margin: 0;
     }
 
-    /* ===== STATUS TEXT ===== */
-
-    .status {
-        font-size: 16px;
-        text-align: center;
-    }
-
-    .countdown {
-        font-size: 20px;
-        text-align: center;
-    }
-
-    /* ===== METRICS ===== */
-
-    .metrics-container {
-        padding: 15px;
-        margin: 15px auto;
-    }
-
+    /* Metrics: 2 per row */
     .metrics-grid {
         grid-template-columns: 1fr 1fr;
     }
 
-    .metric-value {
-        font-size: 18px;
-    }
-
-    /* ===== INFO BOXES ===== */
-
-    .info-boxes {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    /* ===== TABLES ===== */
-
+    /* Tables */
     table {
         width: 95%;
         font-size: 14px;

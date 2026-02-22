@@ -286,6 +286,31 @@ def save_score():
         "storage_type": "database" if USE_DATABASE else "json"
     })
 
+@app.route("/mobile")
+def mobile_index():
+    return render_template("mobile.html", hardware_enabled=HARDWARE_ENABLED)
+
+@app.route("/api/status", methods=["GET"])
+def get_status():
+    status = game_state.copy()
+    status["hardware_enabled"] = HARDWARE_ENABLED
+    status["hardware_available"] = HARDWARE_ENABLED and hardware is not None
+    return jsonify(status)
+
+@app.route("/api/leaderboard/clear", methods=["POST"])
+def clear_leaderboard():
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM leaderboard")
+                conn.commit()
+        except Exception as e:
+            log_app(f"Clear failed: {e}")
+    else:
+        save_leaderboard_json([])
+    
+    return jsonify({"success": True})
 # ==============================
 # MAIN
 # ==============================
