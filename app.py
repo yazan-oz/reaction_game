@@ -145,12 +145,12 @@ def init_database():
          log_app("To enable persistent storage, add a PostgreSQL database in Render")
          USE_DATABASE = False
 
-try:
-    init_database()
-except Exception as e:
-    log_app(f"⚠️ Database initialization failed: {e}")
-    log_app("Continuing with JSON file storage...")
-    USE_DATABASE = False
+#try:
+ #   init_database()
+#except Exception as e:
+ #   log_app(f"⚠️ Database initialization failed: {e}")
+  #  log_app("Continuing with JSON file storage...")
+   # USE_DATABASE = False
 
 def load_leaderboard():
     """Load leaderboard from database or JSON file"""
