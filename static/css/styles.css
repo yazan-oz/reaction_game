@@ -298,6 +298,7 @@ label {
 
 @media (max-width: 768px) {
 
+    /* Headings */
     h1 {
         font-size: 2em;
         margin-top: 10px;
@@ -307,23 +308,58 @@ label {
         font-size: 1.3em;
     }
 
+    /* Layout becomes vertical */
     .main-container {
+        flex-direction: column;
         padding: 0 10px;
     }
 
-    .game-button {
+    /* Chat full width and moved to top */
+    .chat-sidebar {
+        width: 100%;
+        height: 350px;
+        position: relative;
+        order: -1;
+        margin-bottom: 15px;
+    }
+
+    /* Controls stacked (Game Mode + Difficulty) */
+    .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    select {
         width: 90%;
         max-width: 300px;
-        padding: 15px 20px;
-        font-size: 18px;
-        margin: 10px auto;
-        display: block;
     }
 
+    /* Buttons side by side */
     .button-container {
-        margin: 15px 0;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
     }
 
+    .game-button {
+        flex: 1;
+        max-width: 160px;
+        padding: 15px;
+        font-size: 16px;
+        margin: 0;
+    }
+
+    /* General buttons full width */
+    button {
+        width: 90%;
+        max-width: 300px;
+        font-size: 16px;
+    }
+
+    /* Status & countdown */
     .status {
         font-size: 16px;
     }
@@ -332,6 +368,7 @@ label {
         font-size: 20px;
     }
 
+    /* Metrics */
     .metrics-container {
         padding: 15px;
         margin: 15px auto;
@@ -346,6 +383,7 @@ label {
         gap: 10px;
     }
 
+    /* Table adjustments */
     table {
         width: 95%;
         font-size: 14px;
@@ -356,14 +394,6 @@ label {
         font-size: 14px;
     }
 
-    .chat-sidebar {
-        height: 300px;
-    }
-
-    button {
-        width: 90%;
-        font-size: 16px;
-    }
 }
 /* ===== HARDWARE STATUS ===== */
 .hardware-status {
