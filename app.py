@@ -214,22 +214,43 @@ def save_leaderboard_json(data):
 
 def handle_button_press(button_id):
     if not game_state["waiting_for_press"]:
+        log_app("Button press rejected - not waiting")
         return {"error": "Not waiting"}
 
     reaction_time = int((time.time() - game_state["start_time"]) * 1000)
 
     if button_id == game_state["current_button"]:
-        game_state["last_message"] = f"✅ Correct! {reaction_time} ms"
+        game_state["last_message"] = f"✅ Correct! Reaction time: {reaction_time} ms"
         if game_state["best_time"] is None or reaction_time < game_state["best_time"]:
             game_state["best_time"] = reaction_time
 
         game_state["round"] += 1
+        log_app(f"✅ CORRECT - {reaction_time}ms")
     else:
-        game_state["last_message"] = f"❌ Wrong button!"
+        game_state["last_message"] = f"❌ Wrong button! Expected {game_state['current_button']}"
+        log_app(f"❌ WRONG - Expected {game_state['current_button']}, got {button_id}")
 
     game_state["waiting_for_press"] = False
     return game_state
 
+def hardware_button_pressed(button_id):
+    """Callback for hardware button press"""
+    log_app(f"Hardware button {button_id} pressed")
+    if game_state["waiting_for_press"]:
+        handle_button_press(button_id)
+    else:
+        log_app(f"Button {button_id} ignored - not waiting")
+
+# Setup hardware callbacks
+if HARDWARE_ENABLED and hardware:
+    log_app("Setting up hardware button callbacks...")
+    try:
+        hardware.set_button_callback(1, lambda: hardware_button_pressed(1))
+        hardware.set_button_callback(2, lambda: hardware_button_pressed(2))
+        log_app("Hardware callbacks set successfully")
+        atexit.register(hardware.cleanup)
+    except Exception as e:
+        log_app(f"Error setting up callbacks: {e}")
 # ==============================
 # ROUTES
 # ==============================
@@ -276,13 +297,31 @@ def save_score():
         "timestamp": datetime.utcnow().timestamp()
     }
 
+    # Try database first
     if not save_score_to_database(new_entry):
+        # Fallback to JSON
         all_scores = load_leaderboard_json()
         all_scores.append(new_entry)
         save_leaderboard_json(all_scores)
 
+    # Calculate rank
+    all_scores = load_leaderboard()
+    mode_scores = [s for s in all_scores if s.get('gameMode') == data['gameMode']]
+    
+    if data['gameMode'] == 'time_attack':
+        mode_scores.sort(key=lambda x: x.get('score', 0), reverse=True)
+    else:
+        mode_scores.sort(key=lambda x: x.get('avgTime', float('inf')))
+    
+    rank = next((i + 1 for i, s in enumerate(mode_scores) if 
+                 s['name'] == new_entry['name'] and 
+                 abs(s['timestamp'] - new_entry['timestamp']) < 1), len(mode_scores))
+
     return jsonify({
         "success": True,
+        "rank": rank,
+        "total": len(mode_scores),
+        "entry": new_entry,
         "storage_type": "database" if USE_DATABASE else "json"
     })
 
@@ -311,6 +350,7 @@ def clear_leaderboard():
         save_leaderboard_json([])
     
     return jsonify({"success": True})
+
 # ==============================
 # MAIN
 # ==============================
